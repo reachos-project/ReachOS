@@ -1,0 +1,62 @@
+CEO-Virtual Orchestration — Reference Architecture
+Copyright (c) 2026 The reference-architecture authors.
+
+This product is licensed under the Apache License, Version 2.0 (code and
+templates) and CC-BY-4.0 (documentation). See LICENSE and LICENSE-docs.
+
+================================================================================
+Notice of modifications (Apache-2.0 Section 4(c))
+================================================================================
+
+All files in this repository are original compositions written from scratch.
+None were imported, copied, or directly modified from the upstream projects
+listed below. The relationship to those upstreams is one of conceptual descent
+and conscious attribution — not file-level derivation.
+
+================================================================================
+Lineage and attribution
+================================================================================
+
+This reference architecture descends from two upstream projects. It is a
+clean-room rewrite — patterns re-expressed from concept, with generic
+placeholders and fictional examples — not a copy of either upstream. Credit is
+given here gratefully and explicitly.
+
+--------------------------------------------------------------------------------
+1. freskhu/genesis  — Apache License 2.0
+   https://github.com/freskhu/genesis
+--------------------------------------------------------------------------------
+
+The functional structure of this project — the CEO-virtual orchestration model,
+specialised-agent delegation, smart routing, the quality gate, the skills/hooks
+layout, and the transactional-store schema conventions — descends from the
+`genesis` project by freskhu, who shared the structure with our team privately,
+ahead of that project's public release. `genesis` is distributed under the
+Apache License 2.0; this project preserves that attribution as required for
+derivative works. Where this repository reproduces upstream names or schema
+nomenclature (for example the traceability tables `procedural_memory` and
+`activity_history`), the reproduction is conscious and attributed, never
+accidental.
+
+--------------------------------------------------------------------------------
+2. MemPalace/mempalace  — MIT License
+   https://github.com/MemPalace/mempalace
+--------------------------------------------------------------------------------
+
+The 3-tier memory system and its taxonomy — the notion of a semantic memory
+"palace", and the vocabulary of wings / rooms / halls / drawers, mining and
+traversal, the diary, and the bitemporal knowledge graph (valid_from /
+valid_to) — inherit concepts from the `mempalace` project, which was the
+original engine for our memory layer before an internal successor was built.
+`mempalace` is distributed under the MIT License, which is compatible with the
+Apache License 2.0. This attribution is offered as credit for the concepts and
+taxonomy we build upon; where any MIT-licensed source is adapted, its copyright
+notice is preserved alongside.
+
+================================================================================
+
+Both upstream licenses are permissive and mutually compatible. This NOTICE
+propagates their attribution as a matter of both obligation (Apache-2.0) and
+gratitude. The specific security configurations, secrets, real identifiers, and
+trusted-computing-base topology of the system this architecture was distilled
+from are deliberately excluded — see README, "What this repo does NOT contain".
