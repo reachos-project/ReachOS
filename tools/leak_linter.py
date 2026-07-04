@@ -198,14 +198,16 @@ def check_internal_artifacts(staging_root, basenames):
     build-audit artifacts that legitimately carry real identifiers and MUST
     NOT live in the shippable tree. Presence => BLOCK (exit != 0).
     """
-    wanted = set(basenames)
+    # Casefolded comparison: a case-variant basename (e.g. on a
+    # case-insensitive filesystem) must not evade the tripwire.
+    wanted = {b.casefold() for b in basenames}
     hits = []
     for dirpath, dirnames, filenames in os.walk(staging_root):
         dirnames.sort()
         if ".git" in dirnames:
             dirnames.remove(".git")
         for fn in sorted(filenames):
-            if fn in wanted:
+            if fn.casefold() in wanted:
                 rel = os.path.relpath(os.path.join(dirpath, fn), staging_root)
                 hits.append(rel)
     return hits
@@ -317,10 +319,12 @@ def self_check(staging_root, linter_path, denylist_path, mode="default"):
     if mode == "maintainer":
         # Only assert absence of the never-ship deny-lists; the shipped linter
         # and public deny-list are expected artefacts of the public tree.
+        # Casefolded so case-variant basenames cannot evade the check.
+        never_ship = {b.casefold() for b in NEVER_SHIP_FILES}
         problems = []
         for dirpath, _dirs, files in os.walk(staging_root):
             for fn in files:
-                if fn in NEVER_SHIP_FILES:
+                if fn.casefold() in never_ship:
                     problems.append(os.path.join(dirpath, fn))
         return problems
 
