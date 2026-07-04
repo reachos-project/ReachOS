@@ -2,3 +2,9 @@ __pycache__/
 *.pyc
 *.pyo
 .DS_Store
+
+# Never-ship internal artifacts (belt-and-suspenders; the linter's
+# internal_artifacts tripwire BLOCKs these if committed anyway)
+leak_linter_denylist.private.json
+leak_linter_denylist.json
+MANIFEST.md

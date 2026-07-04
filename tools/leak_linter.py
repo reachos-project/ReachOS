@@ -3,8 +3,8 @@
 """
 leak_linter.py  --  Anti-leak linter for the enterprise-open clean-room repo.
 
-Task #489 (N4 hardening, Ivan Sotomayor-Reis). Pre-condition for Phase 1b.
-Task #498 adds --public mode and --redact-matches (Iván ruling, safe-variant).
+Hardened after internal security review. The --public mode and --redact-matches
+flag implement the split-linter safe-variant from that review.
 
 WHAT IT DOES
 ------------
@@ -29,17 +29,26 @@ Default (no flag): full private run; SELF-CHECK refuses (exit 3) if this
   script or the deny-list JSON is found inside the staging tree -- neither
   may ever ship in the public repo. Verbose match output.
 
---public: safe variant for public CI (task #498). Fail-closed: exits 3 if
-  the loaded deny-list contains ANY rule whose category is in the sensitive
-  set (axis-A). Self-check adapted: linter/public-deny-list presence inside
-  the staging tree is expected and NOT flagged. Detection of the private
-  deny-list is delegated to the internal_artifacts tripwire in the public
-  deny-list. Always combine with --redact-matches in CI.
+--public: safe variant for public CI. Fail-closed via an allowlist inversion:
+  exits 3 unless EVERY loaded block rule's category is in the public-allowed
+  set {secret, secret-baseline}. Unknown/new categories therefore fail closed
+  by default instead of slipping through. Self-check adapted: linter/public-
+  deny-list presence inside the staging tree is expected and NOT flagged.
+  Detection of the private deny-list is delegated to the internal_artifacts
+  tripwire in the public deny-list. Always combine with --redact-matches in CI.
+
+--maintainer (alias --allow-shipped-tool): maintainer axis-A run over a tree
+  that legitimately SHIPS the linter. Loads the FULL private deny-list (all
+  axis-A rules active) but the self-check treats the shipped artefacts
+  (leak_linter.py, leak_linter_denylist.public.json) inside the staging tree
+  as EXPECTED and does not flag them. The never-ship deny-lists
+  (leak_linter_denylist.json, leak_linter_denylist.private.json) remain fatal
+  if found inside staging. Mutually exclusive with --public (exit 3 if both).
 
 --redact-matches: suppresses match values and context lines in ALL output
   (text and JSON). Match is replaced with <redacted:N chars>; context is
   replaced with <redacted>. Use in public CI to prevent any matched value
-  from appearing in public job logs (task #498 C2).
+  from appearing in public job logs (C2).
 
 DESIGN
 ------
@@ -80,9 +89,18 @@ TEXT_EXTS = {
 
 SELF_FILES = {"leak_linter.py", "leak_linter_denylist.json"}
 
-# Axis-A categories that are sensitive and must NEVER appear in a public
-# deny-list. In --public mode the linter exits 3 (fail-closed) if any loaded
-# block rule has its category in this set. (task #498, C1)
+# Maintainer mode: files that legitimately ship in the public repo tree and are
+# therefore EXPECTED to live inside staging. They are NOT flagged by the
+# self-check when running with --maintainer.
+MAINTAINER_EXPECTED_FILES = {"leak_linter.py", "leak_linter_denylist.public.json"}
+
+# Files that must NEVER ship in the public repo tree, in ANY mode: the full and
+# private deny-lists carry real identifiers. Presence inside staging is fatal.
+NEVER_SHIP_FILES = {"leak_linter_denylist.json", "leak_linter_denylist.private.json"}
+
+# Descriptive: axis-A categories that carry real identifiers and must never
+# appear in a public deny-list. Kept for documentation of the axis-A surface;
+# the public gate below enforces an allowlist inversion rather than this set.
 SENSITIVE_CATEGORIES = {
     "real-persona",
     "real-persona-surname",
@@ -94,6 +112,12 @@ SENSITIVE_CATEGORIES = {
     "internal-incident-ref",
     "real-schema",
 }
+
+# --public allowlist: the ONLY categories permitted in a public deny-list.
+# The public gate fails closed (exit 3) if any loaded block rule has a category
+# outside this set, so unknown/new categories fail closed by default (hardening
+# from an internal security review).
+PUBLIC_ALLOWED_CATEGORIES = {"secret", "secret-baseline"}
 
 
 def _flags(spec):
@@ -152,7 +176,7 @@ def load_denylist(path):
     mp_ack = [m.lower() for m in mp.get("acknowledgment_markers", [])]
     mp_terms = [(t, re.compile(t, re.IGNORECASE)) for t in mp.get("terms", [])]
 
-    # assert-absent tripwire (ruling Ivan #491): basenames that must NEVER live
+    # assert-absent tripwire (internal review invariant): basenames that must NEVER live
     # inside staging. Presence => synthetic BLOCK. NOT a scan-skip.
     internal_artifacts = data.get("internal_artifacts", {}).get("basenames", [])
 
@@ -167,7 +191,7 @@ def load_denylist(path):
 
 
 def check_internal_artifacts(staging_root, basenames):
-    """Assert-absent invariant enforcement (ruling Ivan #491, C1).
+    """Assert-absent invariant enforcement (internal review invariant, C1).
 
     Walk the WHOLE staging tree (any extension, not just text) and flag any
     file whose basename is on the internal-artifacts list. These are internal
@@ -272,18 +296,34 @@ def scan_file(path, rel, text, dl):
     return findings
 
 
-def self_check(staging_root, linter_path, denylist_path, is_public=False):
+def self_check(staging_root, linter_path, denylist_path, mode="default"):
     """Check that linter and deny-list are not inside the staging tree.
 
-    In --public mode the linter and its public deny-list are expected to live
-    inside the scanned repo tree, so all path-prefix and SELF_FILES checks are
-    skipped. Detection of the private deny-list is instead delegated to the
-    internal_artifacts tripwire in the public deny-list (task #498, C3).
+    mode="public": the linter and its public deny-list are expected to live
+      inside the scanned repo tree, so all path-prefix and SELF_FILES checks are
+      skipped. Detection of the private deny-list is instead delegated to the
+      internal_artifacts tripwire in the public deny-list.
 
-    In default (private) mode the original behaviour is preserved unchanged.
+    mode="maintainer": the shipped artefacts (leak_linter.py,
+      leak_linter_denylist.public.json) are EXPECTED inside the staging tree and
+      are NOT flagged. The never-ship deny-lists (full/private, which carry real
+      identifiers) remain fatal if found inside staging.
+
+    mode="default": the original private-run behaviour is preserved unchanged.
     """
-    if is_public:
+    if mode == "public":
         return []
+
+    if mode == "maintainer":
+        # Only assert absence of the never-ship deny-lists; the shipped linter
+        # and public deny-list are expected artefacts of the public tree.
+        problems = []
+        for dirpath, _dirs, files in os.walk(staging_root):
+            for fn in files:
+                if fn in NEVER_SHIP_FILES:
+                    problems.append(os.path.join(dirpath, fn))
+        return problems
+
     staging_abs = os.path.abspath(staging_root)
     problems = []
     for p in (linter_path, denylist_path):
@@ -309,14 +349,33 @@ def main(argv=None):
                     help="deny-list JSON (default: ./leak_linter_denylist.json)")
     ap.add_argument("--format", choices=["text", "json"], default="text")
     ap.add_argument("--public", action="store_true",
-                    help="public CI mode: fail-closed if deny-list contains any "
-                         "axis-A (sensitive) rule; self-check adapted for a "
-                         "repo-committed linter (task #498, C1+C3)")
+                    help="public CI mode: fail-closed unless every deny-list "
+                         "category is in the public allowlist {secret, "
+                         "secret-baseline}; self-check adapted for a "
+                         "repo-committed linter")
+    ap.add_argument("--maintainer", "--allow-shipped-tool", action="store_true",
+                    dest="maintainer",
+                    help="maintainer axis-A run over a tree that legitimately "
+                         "ships the linter: full deny-list active, but the "
+                         "shipped linter + public deny-list inside staging are "
+                         "expected and not flagged. Mutually exclusive with "
+                         "--public")
     ap.add_argument("--redact-matches", action="store_true",
                     help="suppress match values and context lines in all output "
-                         "to prevent secrets from appearing in public CI logs "
-                         "(task #498, C2)")
+                         "to prevent secrets from appearing in public CI logs")
     args = ap.parse_args(argv)
+
+    if args.public and args.maintainer:
+        sys.stderr.write(
+            "ERROR: --public and --maintainer are mutually exclusive\n")
+        return 3
+
+    if args.public:
+        mode = "public"
+    elif args.maintainer:
+        mode = "maintainer"
+    else:
+        mode = "default"
 
     if not os.path.isdir(args.staging):
         sys.stderr.write("ERROR: staging dir not found: %s\n" % args.staging)
@@ -326,10 +385,10 @@ def main(argv=None):
         return 3
 
     # SELF-CHECK -----------------------------------------------------------
-    # In --public mode returns [] immediately; relies on internal_artifacts.
-    # In default (private) mode: unchanged behaviour from task #489.
-    problems = self_check(args.staging, __file__, args.denylist,
-                          is_public=args.public)
+    # public   : returns [] immediately; relies on internal_artifacts.
+    # maintainer: asserts only the never-ship deny-lists are absent from staging.
+    # default  : unchanged behaviour from the original private linter.
+    problems = self_check(args.staging, __file__, args.denylist, mode=mode)
     if problems:
         sys.stderr.write(
             "SELF-CHECK FAIL: linter/denylist must NOT be inside staging:\n"
@@ -340,22 +399,24 @@ def main(argv=None):
 
     dl = load_denylist(args.denylist)
 
-    # PUBLIC-MODE FAIL-CLOSED (task #498, C1) ------------------------------
-    # After loading, reject any deny-list that contains an axis-A rule.
-    # This ensures that accidentally pointing --public at the private deny-list
-    # causes a hard build break (exit 3) rather than silently scanning with
+    # PUBLIC-MODE FAIL-CLOSED (allowlist inversion) -------------------------------
+    # After loading, reject the deny-list unless EVERY block rule's category is
+    # in the public allowlist {secret, secret-baseline}. This fails closed for
+    # unknown/new categories (they slip through a deny-only check), and in
+    # particular causes a hard build break (exit 3) when --public is accidentally
+    # pointed at the private deny-list rather than silently scanning with
     # sensitive rules and logging real identifiers to the public CI log.
     if args.public:
-        leaked_cats = sorted({
+        disallowed_cats = sorted({
             rule["category"]
             for rule in dl["block"]
-            if rule["category"] in SENSITIVE_CATEGORIES
+            if rule["category"] not in PUBLIC_ALLOWED_CATEGORIES
         })
-        if leaked_cats:
-            for cat in leaked_cats:
+        if disallowed_cats:
+            for cat in disallowed_cats:
                 sys.stderr.write(
-                    "PUBLIC-MODE FAIL: sensitive category '%s' in deny-list %s\n"
-                    % (cat, args.denylist)
+                    "PUBLIC-MODE FAIL: non-allowlisted category '%s' in "
+                    "deny-list %s\n" % (cat, args.denylist)
                 )
             return 3
 
@@ -378,7 +439,7 @@ def main(argv=None):
             total_warn += sum(1 for f in findings if f["severity"] == "WARN")
 
     # assert-absent tripwire: internal build-audit artifacts must not exist in
-    # the shippable tree (ruling Ivan #491, C1). Synthetic BLOCK per hit.
+    # the shippable tree (internal review invariant, C1). Synthetic BLOCK per hit.
     per_file_map = dict(per_file)
     for rel in check_internal_artifacts(args.staging, dl["internal_artifacts"]):
         finding = {
@@ -428,9 +489,11 @@ def main(argv=None):
         print(json.dumps(out, ensure_ascii=False, indent=2))
     else:
         print("=" * 72)
-        print("ANTI-LEAK LINTER  --  enterprise-open  (task #489)")
+        print("ANTI-LEAK LINTER  --  enterprise-open")
         if args.public:
-            print("MODE    : --public (axis-A rules refused; fail-closed)")
+            print("MODE    : --public (allowlist-inversion; fail-closed)")
+        if args.maintainer:
+            print("MODE    : --maintainer (full deny-list; shipped tool expected)")
         if args.redact_matches:
             print("OUTPUT  : --redact-matches (match values suppressed)")
         print("staging : %s" % os.path.abspath(args.staging))
