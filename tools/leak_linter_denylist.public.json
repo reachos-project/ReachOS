@@ -1,0 +1,59 @@
+{
+  "_meta": {
+    "purpose": "Public deny-list (axis-B) for leak_linter.py. Contains generic secret-pattern detectors (BLOCK) and upstream-name / mempalace-taxonomy overlap warnings (WARN). Safe to commit to the public repo -- contains no real identifiers.",
+    "audience": "Open-source contributors and maintainers.",
+    "location_invariant": "This file (leak_linter_denylist.public.json) and leak_linter.py belong in tools/ inside the public repo tree. The private deny-list (axis-A, real identifiers) is a separate file that must never be committed here.",
+    "axis": "Axis-B rules only. Axis-A rules (real personas, paths, infra, schema) live in the private deny-list which is never shipped.",
+    "severity_semantics": {
+      "BLOCK": "generic secret pattern detected (API token, private key, bare hash) -> exit code 2; merge blocked",
+      "WARN": "upstream-name overlap or mempalace taxonomy without attribution marker -> informational; does not change exit code"
+    },
+    "tuning_notes": "Regex Python (re). flags: 'i'=IGNORECASE. exempt_regex optional: if it matches the containing line, the hit is suppressed. Run with --public --redact-matches in CI."
+  },
+
+  "internal_artifacts": {
+    "_note": "Assert-absent tripwires. Files with these basenames must never appear in the public repo tree. Presence is a BLOCK (exit 2), not a scan-skip. Includes the private deny-list filenames so that accidentally committing them is caught by public CI.",
+    "basenames": [
+      "MANIFEST.md",
+      "leak_linter_denylist.private.json",
+      "leak_linter_denylist_internal.json"
+    ]
+  },
+
+  "block": [
+    { "id": "secret_github_pat_classic",    "regex": "ghp_[A-Za-z0-9]{20,}",            "flags": "",  "category": "secret",          "note": "GitHub PAT classic" },
+    { "id": "secret_github_pat_fine",       "regex": "github_pat_[A-Za-z0-9_]{20,}",    "flags": "",  "category": "secret",          "note": "GitHub fine-grained PAT" },
+    { "id": "secret_github_oauth",          "regex": "gh[osu]_[A-Za-z0-9]{20,}",        "flags": "",  "category": "secret",          "note": "GitHub OAuth / server-to-server token" },
+    { "id": "secret_openai_anthropic_sk",   "regex": "sk-(ant-)?[A-Za-z0-9_-]{20,}",   "flags": "",  "category": "secret",          "note": "OpenAI / Anthropic API key" },
+    { "id": "secret_slack_token",           "regex": "xox[baprs]-[A-Za-z0-9-]{10,}",   "flags": "",  "category": "secret",          "note": "Slack bot / user token" },
+    { "id": "secret_aws_akid",              "regex": "AKIA[0-9A-Z]{16}",                "flags": "",  "category": "secret",          "note": "AWS access key ID" },
+    { "id": "secret_private_key_block",     "regex": "-----BEGIN [A-Z ]*PRIVATE KEY-----", "flags": "", "category": "secret",       "note": "PEM private key header" },
+    { "id": "secret_hex_sha256",            "regex": "\\b[0-9a-f]{64}\\b",              "flags": "",  "category": "secret-baseline", "note": "bare 64-char hex is likely a SHA-256 baseline or pin" },
+    { "id": "secret_hex_sha1",              "regex": "\\b[0-9a-f]{40}\\b",              "flags": "",  "category": "secret-baseline", "note": "bare 40-char hex is likely a SHA-1 baseline or pin" },
+    { "id": "secret_hex_pin_context",       "regex": "(?i)(pin|sha256|sha-?1|baseline|tier[- ]?0)[^\\n]{0,24}\\b[0-9a-f]{8,}\\b", "flags": "", "category": "secret-baseline", "note": "8+ char hex adjacent to a pin/hash context keyword" }
+  ],
+
+  "upstream_names": {
+    "_note": "WARN 'upstream-name-overlap'. Fires when a staging file basename or its content matches a name from the freskhu/genesis upstream tree. Universal OSS filenames are exempt (see ignore_universal). Non-blocking: demands conscious acknowledgment.",
+    "ignore_universal": ["readme", "license", "license-docs", "notice", "contributing", "changelog", "gitignore", "claude", "agents", "requirements", "manifest", "glossary"],
+    "names": [
+      "dream", "forum-pulse", "grill-me", "handoff", "inbox-process", "kaizen",
+      "quarterly-review", "sync-upstream", "twin-update", "weekly-review", "write-a-skill",
+      "db-health", "hire", "genesis", "circuit-breaker", "checkpoint", "context-loading",
+      "dbsync-rules", "hiring-pipeline", "llm-logging", "procedural-memory", "activity-history", "agent-outputs",
+      "session-start", "session-end", "memory_tiers", "generate_memory_hot", "genesis_forum",
+      "sql-guardrails", "block-temp-inbox", "post-delegation", "precompact-save",
+      "session-stop-save", "force-session-end", "log_llm_call", "palace",
+      "lena", "maria", "sarah"
+    ]
+  },
+
+  "mempalace_terms": {
+    "_note": "WARN 'mempalace-taxonomy-unattributed'. Fires when a mempalace taxonomy term appears in a file that has no acknowledgment marker anywhere on the page. Non-blocking: demands conscious attribution.",
+    "acknowledgment_markers": ["mempalace", "acknowledg", "notice", "upstream", "attribution", "crédito", "credito", "atribuic"],
+    "terms": [
+      "\\bwings?\\b", "\\bhalls?\\b", "\\bdrawers?\\b", "\\btunnels?\\b",
+      "\\bmempalace\\w*", "\\bvalid_from\\b", "\\bvalid_to\\b", "\\bbitemporal\\b"
+    ]
+  }
+}

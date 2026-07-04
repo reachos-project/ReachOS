@@ -1,0 +1,72 @@
+# anti-leak.yml -- Public CI gate for the enterprise-open reference repo.
+#
+# Design: internal security review (2026-07-03), Option 1+ (split linter).
+#
+# WHAT THIS DOES
+# --------------
+# Runs leak_linter.py in --public --redact-matches mode against the full repo
+# tree on every pull request (including fork PRs) and on pushes to main.
+#
+# Axis-B checks (generic secrets + upstream-name overlap + internal-artifact
+# tripwires) run on every contributor PR with zero repository secrets needed.
+# Axis-A checks (real personas, paths, infra, schema) are performed separately
+# by the maintainer locally before merge using the private deny-list.
+#
+# SECURITY PROPERTIES
+# -------------------
+# * pull_request (NOT pull_request_target): untrusted PR code runs with a
+#   read-only token and no repository secrets -- nothing to exfiltrate.
+# * No `secrets:` key anywhere in this file: a misconfiguration cannot leak a
+#   secret that was never present in the pipeline.
+# * --redact-matches: if a contributor accidentally commits a real API token
+#   (ghp_, sk-...), the job logs show rule+line but NOT the token value.
+# * --public: linter exits 3 (build break) if the deny-list file it loads
+#   contains any axis-A (sensitive) rule, making it impossible to accidentally
+#   point CI at the private deny-list.
+#
+# EXIT CODES (from leak_linter.py)
+# ---------------------------------
+# 0  PASS -- 0 BLOCK findings
+# 2  FAIL -- >=1 BLOCK findings (secret / internal-artifact tripwire hit)
+# 3  ERROR -- fail-closed: public mode loaded a sensitive rule, or self-check
+#
+# Any non-zero exit fails the required check and blocks merge.
+
+name: anti-leak
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: read  # least privilege; no write token, no secrets used
+
+jobs:
+  anti-leak:
+    name: Anti-leak linter (public, axis-B, redacted)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false  # no write token needed; belt-and-suspenders
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run public anti-leak linter (fail-closed, redacted output)
+        # --public       : exits 3 if deny-list contains any axis-A rule (fail-closed)
+        # --staging .    : scan the full repo tree
+        # --denylist ... : axis-B only public deny-list; no sensitive content
+        # --redact-matches : matched values (e.g. ghp_ tokens) are NOT printed
+        run: |
+          python3 tools/leak_linter.py \
+            --public \
+            --staging . \
+            --denylist tools/leak_linter_denylist.public.json \
+            --redact-matches

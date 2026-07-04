@@ -1,60 +1,60 @@
-# 00 — Visão geral
+# 00 — Overview
 
-## O problema
+## The problem
 
-Uma única sessão de assistente generalista degrada-se quando tenta ser tudo ao mesmo tempo:
-o contexto satura, o tom oscila, e não há separação de responsabilidades. A resposta é
-**especialização com coordenação** — muitos agentes focados, um coordenador que os orquestra.
+A single generalist assistant session degrades when it tries to be everything at once:
+context saturates, tone drifts, and there is no separation of concerns. The answer is
+**specialisation with coordination** — many focused agents, one coordinator that orchestrates them.
 
-## O modelo
+## The model
 
 ```
                     ┌─────────────────┐
-   Utilizador  ───► │   COORDENADOR   │ ───► Utilizador
-                    │  (CEO-virtual)  │
+        User   ───► │   COORDINATOR   │ ───► User
+                    │  (virtual CEO)  │
                     └───────┬─────────┘
-                            │ delega
-              ┌─────────────┬─────────────┐
+                            │ delegates
+              ┌─────────────┼─────────────┐
               ▼             ▼             ▼
         ┌──────────┐  ┌──────────┐  ┌──────────┐
-        │ Agente A │  │ Agente B │  │ Agente C │
-        │ (domínio)│  │ (domínio)│  │ (domínio)│
+        │ Agent A  │  │ Agent B  │  │ Agent C  │
+        │ (domain) │  │ (domain) │  │ (domain) │
         └──────────┘  └──────────┘  └──────────┘
 ```
 
-O coordenador:
-- **Interpreta** o pedido e classifica-o numa rota (`docs/02`).
-- **Delega** para o agente adequado (ou vários, em paralelo).
-- **Sintetiza** os resultados numa resposta coerente.
-- **Nunca** faz o trabalho operacional — a única excepção são micro-edições de configuração.
+The coordinator:
+- **Interprets** the request and classifies it into a route (`docs/02`).
+- **Delegates** to the appropriate agent (or several, in parallel).
+- **Synthesises** the results into a coherent response.
+- **Never** does operational work — the only exception is minor configuration micro-edits.
 
-Cada agente:
-- Tem uma **persona** (identidade, expertise, estilo, constraints) definida num ficheiro próprio.
-- Opera só no seu **workspace** designado.
-- Devolve o resultado ao coordenador — **nunca** comunica directamente com o utilizador.
+Each agent:
+- Has a **persona** (identity, expertise, style, constraints) defined in its own file.
+- Operates only within its designated **workspace**.
+- Returns the result to the coordinator — **never** communicates directly with the user.
 
-## Os cinco pilares
+## The five pillars
 
-| Pilar | Documento | Ideia central |
+| Pillar | Document | Core concept |
 |---|---|---|
-| Orquestração | `01-orchestration.md` | Regras de governança do coordenador. |
-| Encaminhamento | `02-smart-routing.md` | 5 rotas para classificar qualquer pedido. |
-| Memória | `03-memory-3tier.md` | Persistência em 3 níveis, markdown como SoT. |
-| Quality gate | `04-quality-gate.md` | Checklist bloqueante antes de entregar. |
-| Segurança | `05-guardrails.md` · `06-heartbeat.md` · `07-worker-confinement.md` | Defence-in-depth + automação confinada. |
-| Governança de dados | `08-control-via-audit.md` | Escrita livre, auditável e reversível. |
+| Orchestration | `01-orchestration.md` | Governance rules for the coordinator. |
+| Routing | `02-smart-routing.md` | 5 routes to classify any request. |
+| Memory | `03-memory-3tier.md` | 3-tier persistence, markdown as SoT. |
+| Quality gate | `04-quality-gate.md` | Blocking checklist before delivery. |
+| Security | `05-guardrails.md` · `06-heartbeat.md` · `07-worker-confinement.md` | Defence-in-depth + confined automation. |
+| Data governance | `08-control-via-audit.md` | Free, auditable, and reversible writes. |
 
-## Princípios transversais
+## Cross-cutting principles
 
-1. **Rastreabilidade.** Toda a tarefa, delegação e entrega é registada. O histórico é consultável.
-2. **Separação de responsabilidades.** Um agente = um domínio. O coordenador não invade domínios.
-3. **Fonte-de-verdade explícita.** Ficheiros humanamente legíveis são autoritativos; índices são derivados.
-4. **Fail-safe.** Na dúvida, os controlos bloqueiam (over-block) em vez de deixar passar.
-5. **Reversibilidade.** Preferir escrita livre + auditoria a aprovação prévia que trava o fluxo.
+1. **Traceability.** Every task, delegation, and deliverable is logged. The history is queryable.
+2. **Separation of concerns.** One agent = one domain. The coordinator does not invade domains.
+3. **Explicit source of truth.** Human-readable files are authoritative; indexes are derived.
+4. **Fail-safe.** When in doubt, controls block (over-block) rather than let things through.
+5. **Reversibility.** Prefer free writes + audit over prior approval that stalls the flow.
 
-## Como ler este repo
+## How to read this repo
 
-Começa por `01` e `02` (o núcleo da orquestração), depois `03` (memória) e `04` (qualidade).
-Os documentos `05`–`07` descrevem a postura de segurança em **conceito** — os esqueletos de
-implementação ficam deliberadamente fora deste repo. Instancia os `templates/` com a ajuda do
-exemplo em `examples/atlas-consulting/`.
+Start with `01` and `02` (the orchestration core), then `03` (memory) and `04` (quality).
+Documents `05`–`07` describe the security posture **conceptually** — implementation skeletons
+are deliberately excluded from this repo. Instantiate the `templates/` with the help of the
+example in `examples/atlas-consulting/`.

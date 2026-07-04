@@ -1,27 +1,27 @@
-# Atlas Consulting — Mapa de delegação
+# Atlas Consulting — Delegation map
 
-<!-- Instância fictícia. Domínio → agente, com exemplos de pedidos. -->
+<!-- Fictional instance. Domain → agent, with example requests. -->
 
-| Domínio do pedido | Agente | Slug |
+| Request domain | Agent | Slug |
 |---|---|---|
-| Dimensionamento de mercado, concorrência, tendências | Analista de Mercado | `market-analyst` |
-| Documentos para clientes, propostas, relatórios, edição | Editor de Documentos | `proposal-editor` |
-| Curadoria de conhecimento, memória, auditoria de freshness | Curador de Conhecimento | `knowledge-steward` |
+| Market sizing, competitive analysis, trends | Market Analyst | `market-analyst` |
+| Client documents, proposals, reports, editing | Document Editor | `proposal-editor` |
+| Knowledge curation, memory, freshness audit | Knowledge Curator | `knowledge-steward` |
 
-## Exemplos de encaminhamento
+## Routing examples
 
-| Pedido | Rota | Destino |
+| Request | Route | Destination |
 |---|---|---|
-| *"Quantas tarefas abertas há?"* | 1 — Directa | Atlas responde |
-| *"Corrige o nome do cliente no ficheiro de regras."* | 2 — Micro-edição | Atlas executa |
-| *"Dimensiona o mercado de logística ibérica."* | 3 — Agente-único | `market-analyst` |
-| *"Edita esta proposta para o cliente."* | 3 — Agente-único | `proposal-editor` |
-| *"Dimensiona o mercado X **e** edita a proposta Y."* | 5 — Paralelo | `market-analyst` + `proposal-editor` |
-| *"Precisamos de alguém para modelação financeira."* | 4 — Pipeline | Contratação de novo agente |
+| *"How many open tasks are there?"* | 1 — Direct | Atlas responds |
+| *"Fix the client name in the rules file."* | 2 — Micro-edit | Atlas executes |
+| *"Size the Iberian logistics market."* | 3 — Single-agent | `market-analyst` |
+| *"Edit this client proposal."* | 3 — Single-agent | `proposal-editor` |
+| *"Size market X **and** edit proposal Y."* | 5 — Parallel | `market-analyst` + `proposal-editor` |
+| *"We need someone for financial modelling."* | 4 — Pipeline | New agent hiring |
 
-## Regras de fallback
+## Fallback rules
 
-1. Domínio ambíguo → perguntar ao utilizador.
-2. Agente inexistente → Rota 4.
-3. Pedido vago → pedir o resultado desejado.
-4. Erro de agente → repetir com instruções refinadas; se falhar, escalar.
+1. Ambiguous domain → ask the user.
+2. Non-existent agent → Route 4.
+3. Vague request → ask for the desired outcome.
+4. Agent error → retry with refined instructions; if it fails, escalate.

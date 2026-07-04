@@ -1,23 +1,23 @@
-# Glossário
+# Glossary
 
-Termos usados de forma consistente em todo o repo.
+Terms used consistently throughout this repo.
 
-| Termo | Definição |
+| Term | Definition |
 |---|---|
-| **Coordenador (CEO-virtual)** | Agente central que interpreta pedidos, delega e sintetiza. Não executa trabalho operacional. |
-| **Agente especializado** | Persona com domínio próprio (ex.: analista, editor, curador). Recebe delegações do coordenador. |
-| **Rota** | Classe de encaminhamento de um pedido. Existem 5 (ver `docs/02-smart-routing.md`). |
-| **Delegação** | Transferência de uma tarefa do coordenador para um agente, registada para rastreabilidade. |
-| **Memória hot / warm / cold** | Três níveis de persistência: carregado-sempre / on-demand / arquivo semântico. |
-| **Fonte-de-verdade (SoT)** | O artefacto autoritativo. No modelo aqui descrito, são ficheiros markdown; índices são derivados. |
-| **Índice vectorial** | Camada de retrieval semântico construída por cima da SoT; nunca a substitui. |
-| **ETL incremental** | Processo que re-mineia a SoT para o índice de forma idempotente. |
-| **Quality gate (QG)** | Checklist bloqueante corrido antes de entregar um deliverable. |
-| **Deliverable** | Artefacto final produzido por um agente e entregue ao utilizador. |
-| **Guardrail** | Controlo automático que autoriza ou bloqueia uma acção antes de esta ocorrer. |
-| **Defence-in-depth** | Sobreposição de várias camadas de guardrails independentes. |
-| **Tier-1 (paths críticos)** | Ficheiros de configuração/identidade cuja alteração exige protecção reforçada. |
-| **Heartbeat** | Daemon periódico confinado que faz verificações e escala por custo. |
-| **Egress-allowlist** | Lista fechada de destinos de rede que um worker confinado pode contactar. |
-| **Controlo-via-auditoria** | Filosofia: escrita livre + registada + reversível, em vez de aprovação prévia obrigatória. |
-| **Placeholder / token** | Marcador `{{TOKEN}}` a substituir por um valor concreto ao instanciar um template. |
+| **Coordinator (virtual CEO)** | The central agent that interprets requests, delegates, and synthesises. Does not perform operational work. |
+| **Specialist agent** | A persona with its own domain (e.g., analyst, editor, curator). Receives delegations from the coordinator. |
+| **Route** | The routing class of a request. There are 5 (see `docs/02-smart-routing.md`). |
+| **Delegation** | Transfer of a task from the coordinator to an agent, logged for traceability. |
+| **Hot / warm / cold memory** | Three persistence tiers: always-loaded / on-demand / semantic archive. |
+| **Source of truth (SoT)** | The authoritative artefact. In the model described here, these are markdown files; indexes are derived. |
+| **Vector index** | A semantic retrieval layer built on top of the SoT; never replaces it. |
+| **ETL incremental** | The process that re-mines the SoT into the index in an idempotent way. |
+| **Quality gate (QG)** | A blocking checklist run before delivering a deliverable. |
+| **Deliverable** | The final artefact produced by an agent and handed to the user. |
+| **Guardrail** | An automatic control that authorises or blocks an action before it occurs. |
+| **Defence-in-depth** | The stacking of several independent guardrail layers. |
+| **Tier-1 (critical paths)** | Configuration/identity files whose modification requires hardened protection. |
+| **Heartbeat** | A periodic confined daemon that performs checks and escalates by cost. |
+| **Egress-allowlist** | A closed list of network destinations that a confined worker is permitted to contact. |
+| **Control-via-audit** | The philosophy of free + logged + reversible writes, rather than mandatory prior approval. |
+| **Placeholder / token** | A `{{TOKEN}}` marker to be replaced with a concrete value when instantiating a template. |

@@ -1,23 +1,23 @@
-# Exemplo — Atlas Consulting
+# Example — Atlas Consulting
 
-Uma instância **fictícia e completa** dos templates deste repo, para servir de referência.
-A "Atlas Consulting" é uma empresa de consultoria inventada; o coordenador chama-se **Atlas**
-e tem três agentes. Todos os nomes, pessoas, números e paths aqui são **inventados** e
-existem apenas para ilustrar como os padrões se instanciam.
+A **fictional and complete** instance of this repo's templates, to serve as a reference.
+"Atlas Consulting" is an invented consultancy; the coordinator is called **Atlas** and has
+three agents. All names, people, numbers, and paths here are **invented** and exist only to
+illustrate how the patterns are instantiated.
 
-## Conteúdo
+## Contents
 
-| Ficheiro | O que ilustra |
+| File | What it illustrates |
 |---|---|
-| `atlas-consulting/ORCHESTRATOR.md` | Ficheiro do coordenador instanciado a partir do template. |
-| `atlas-consulting/routing-map.md` | Mapa de delegação domínio → agente. |
-| `atlas-consulting/agents/market-analyst.md` | Agente de análise de mercado (persona fictícia). |
-| `atlas-consulting/agents/proposal-editor.md` | Agente de redacção/edição (persona fictícia). |
-| `atlas-consulting/agents/knowledge-steward.md` | Agente de curadoria de conhecimento (persona fictícia). |
-| `db/schema.example.sql` | Schema conceptual do store transaccional (rastreabilidade). |
+| `atlas-consulting/ORCHESTRATOR.md` | Coordinator file instantiated from the template. |
+| `atlas-consulting/routing-map.md` | Delegation map domain → agent. |
+| `atlas-consulting/agents/market-analyst.md` | Market analysis agent (fictional persona). |
+| `atlas-consulting/agents/proposal-editor.md` | Writing/editing agent (fictional persona). |
+| `atlas-consulting/agents/knowledge-steward.md` | Knowledge curation agent (fictional persona). |
+| `db/schema.example.sql` | Conceptual schema of the transactional store (traceability). |
 
-## Como usar
+## How to use
 
-Lê estes ficheiros lado a lado com os `templates/` para veres cada `{{TOKEN}}` substituído por
-um valor concreto. Depois cria a tua própria instância a partir dos templates — **não** copies
-a Atlas Consulting como se fosse produção.
+Read these files side by side with the `templates/` to see each `{{TOKEN}}` replaced with a
+concrete value. Then create your own instance from the templates — **do not** copy Atlas
+Consulting as if it were production.

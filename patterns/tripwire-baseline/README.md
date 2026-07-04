@@ -1,68 +1,67 @@
-# Padrão: Tripwire + baseline com disciplina de rebaseline
+# Pattern: Tripwire + baseline with rebaseline discipline
 
-> **Âmbito.** Engenharia de um tripwire de integridade sobre ficheiros críticos. O conjunto
-> concreto de ficheiros vigiados (os globs) e os hashes reais **não** fazem parte do repo —
-> revelam a topologia do sistema de confiança. Paths fictícios.
+> **Scope.** Engineering of an integrity tripwire over critical files. The concrete set of
+> watched files (the globs) and the real hashes are **not** part of the repo — they reveal the
+> trust-system topology. Fictional paths.
 
-## Objectivo
+## Objective
 
-Detectar **alterações não autorizadas** a ficheiros críticos (config do coordenador, regras,
-hooks, perfis de sandbox) entre o momento em que se sabe que estão bons e agora.
+Detecting **unauthorised changes** to critical files (coordinator config, rules, hooks, sandbox
+profiles) between the moment they are known-good and now.
 
-## Mecanismo
+## Mechanism
 
-1. **Baseline:** calcular um **manifesto de hashes** dos ficheiros críticos num estado
-   conhecido-bom, e guardá-lo (pin).
-2. **Tripwire:** periodicamente (e no arranque de sessão) **re-calcular** os hashes e comparar
-   com o pin. Qualquer divergência → **alerta**.
+1. **Baseline:** compute a **hash manifest** of the critical files in a known-good state, and
+   save it (pin).
+2. **Tripwire:** periodically (and at session start) **re-compute** the hashes and compare with
+   the pin. Any divergence → **alert**.
 
 ```text
-# PSEUDO-CÓDIGO — os globs vigiados são configuração da instalação, não deste repo.
-pin  := load_manifest(BASELINE_PIN)        # { path: hash } de um estado conhecido-bom
-now  := hash_all(WATCHED_GLOBS)            # WATCHED_GLOBS NÃO distribuído
+# PSEUDO-CODE — the watched globs are installation configuration, not part of this repo.
+pin  := load_manifest(BASELINE_PIN)        # { path: hash } from a known-good state
+now  := hash_all(WATCHED_GLOBS)            # WATCHED_GLOBS is NOT distributed
 drift := diff(pin, now)
 if drift:
-    alert("integridade: ficheiros mudaram vs baseline", drift)
+    alert("integrity: files changed vs baseline", drift)
 ```
 
-## A parte difícil: disciplina de rebaseline
+## The hard part: rebaseline discipline
 
-O tripwire só é útil se as alterações **legítimas** forem tratadas de forma disciplinada.
-Senão, cada alteração autorizada dispara um alerta, o operador habitua-se a ignorar alertas
-(**alert-fatigue**), e o tripwire perde valor exactamente quando é preciso.
+The tripwire is only useful if **legitimate** changes are handled in a disciplined way.
+Otherwise, every authorised change fires an alert, the operator gets used to ignoring alerts
+(**alert-fatigue**), and the tripwire loses value precisely when it is needed.
 
-Regra: **uma alteração autorizada a um ficheiro vigiado tem de disparar um rebaseline na mesma
-sessão.** O fluxo:
+Rule: **an authorised change to a watched file must trigger a rebaseline in the same session.**
+The flow:
 
 ```
-Alteração autorizada a ficheiro vigiado
+Authorised change to a watched file
         │
         ▼
-Re-calcular hash desse ficheiro  ──►  actualizar o pin (rebaseline)  ──►  registar quem/quando/porquê
+Re-compute that file's hash  ──►  update the pin (rebaseline)  ──►  record who/when/why
         │
         ▼
-O tripwire volta a estar "verde" para esse ficheiro
+The tripwire is "green" again for that file
 ```
 
-- Uma alteração **autorizada sem rebaseline** = alerta falso recorrente → erosão do sinal.
-- Uma alteração **não autorizada** = drift sem rebaseline correspondente → alerta verdadeiro.
+- An **authorised change without rebaseline** = recurring false alert → signal erosion.
+- An **unauthorised change** = drift without a corresponding rebaseline → true alert.
 
-A distinção entre os dois casos é precisamente a existência (ou não) de um rebaseline
-**registado e justificado** para aquela alteração.
+The distinction between the two cases is precisely the existence (or not) of a rebaseline
+**registered and justified** for that change.
 
-## Controlo de dois lados (snapshot vs live)
+## Two-sided control (snapshot vs live)
 
-Para apanhar tanto a alteração legítima esquecida como a maliciosa, comparar o estado **live**
-contra um **snapshot** em dois momentos: no **arranque** da sessão (apanha alterações feitas
-enquanto ninguém estava a ver, ex.: um processo que morreu a meio) e no **fecho** (apanha
-alterações feitas durante a sessão e re-baseliza o snapshot). Se o arranque encontra drift sem
-um fecho anterior que o justifique, isso é o caminho-de-crash — trazer à atenção do humano antes
-de qualquer outra coisa.
+To catch both the forgotten legitimate change and the malicious one, compare the **live** state
+against a **snapshot** at two moments: at **session start** (catches changes made while no one
+was watching, e.g.: a process that died mid-way) and at **close** (catches changes made during
+the session and re-baselines the snapshot). If start finds drift without a prior close that
+justifies it, that is the crash-path — bring it to the human's attention before anything else.
 
-## Princípios
+## Principles
 
-1. **Baseline = estado conhecido-bom**, com pin versionado (mas os hashes reais fora do público).
-2. **Alteração autorizada → rebaseline na mesma sessão**, senão alert-fatigue.
-3. **Rebaseline é registado e justificado** — é o que distingue autorizado de malicioso.
-4. **Controlo de dois lados** — arranque e fecho — para não haver janela cega.
-5. **Os globs vigiados são privados** — publicá-los diz ao atacante o que evitar tocar.
+1. **Baseline = known-good state**, with versioned pin (but real hashes outside the public repo).
+2. **Authorised change → rebaseline in the same session**, otherwise alert-fatigue.
+3. **Rebaseline is registered and justified** — that is what distinguishes authorised from malicious.
+4. **Two-sided control** — start and close — so there is no blind window.
+5. **The watched globs are private** — publishing them tells the attacker what to avoid touching.

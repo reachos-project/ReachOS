@@ -1,61 +1,61 @@
-# 07 — Worker confinado com egress-allowlist
+# 07 — Confined worker with egress allowlist
 
-> **Âmbito.** Padrão para correr trabalho autónomo (um "worker") de forma isolada. Allowlists
-> de hosts reais, chaves e runbooks de instalação ficam fora deste repo.
+> **Scope.** Pattern for running autonomous work (a "worker") in isolation. Real host
+> allowlists, keys, and installation runbooks are excluded from this repo.
 
-## Objectivo
+## Objective
 
-Executar tarefas autónomas — potencialmente longas, potencialmente a partir de input não
-totalmente confiável — sem dar ao worker acesso livre ao sistema nem à rede. O worker é uma
-caixa com portas muito estreitas.
+Execute autonomous tasks — potentially long-running, potentially from not fully trusted
+input — without giving the worker free access to the system or the network. The worker is a
+box with very narrow openings.
 
-## Arquitectura
+## Architecture
 
 ```
-   Coordenador                         Worker confinado
-       │  enfileira tarefa                    │
-       ▼  (mensagem assinada)                 │
-  ┌─────────┐   valida assinatura   ┌──────────────────┐
-  │  FILA   │ ───────────────────► │  sandbox (FS/net │
-  └─────────┘                       │  mínimos)         │
-       ▲                            └────────┬──────────┘
-       │ resultado                           │ rede de saída
-       │                                     ▼
-       │                            ┌──────────────────┐
-       └─────────────────────────  │  EGRESS-PROXY     │
-                                    │  (allowlist fecha-│
-                                    │   da de hosts)    │
-                                    └──────────────────┘
+   Coordinator                          Confined worker
+       │  enqueues task                       │
+       ▼  (signed message)                    │
+  ┌─────────┐   validates signature  ┌──────────────────┐
+  │  QUEUE  │ ──────────────────────► │  sandbox (FS/net │
+  └─────────┘                        │  minimal)         │
+       ▲                             └────────┬──────────┘
+       │ result                               │ outbound network
+       │                                      ▼
+       │                             ┌──────────────────┐
+       └───────────────────────────  │  EGRESS-PROXY     │
+                                     │  (closed allowlist│
+                                     │   of hosts)       │
+                                     └──────────────────┘
 ```
 
-## Componentes
+## Components
 
-| Componente | Função |
+| Component | Function |
 |---|---|
-| **Fila assinada** | O coordenador enfileira tarefas com uma assinatura (ex.: HMAC). O worker só executa mensagens com assinatura válida — impede injecção de trabalho. |
-| **Sandbox do worker** | Perfil que restringe filesystem e rede ao mínimo necessário para a tarefa. |
-| **Egress-proxy** | Toda a rede de saída passa por um proxy com **allowlist fechada** de hosts. Tudo o resto é negado e registado. |
-| **Quarentena** | Input ou output suspeito é isolado numa área de quarentena em vez de processado. |
-| **Limites de concorrência** | Um cap explícito de workers simultâneos, com um máximo duro acima do qual não se sobe sem revisão. |
+| **Signed queue** | The coordinator enqueues tasks with a signature (e.g., HMAC). The worker only executes messages with a valid signature — prevents work injection. |
+| **Worker sandbox** | Profile that restricts filesystem and network to the minimum needed for the task. |
+| **Egress-proxy** | All outbound network traffic passes through a proxy with a **closed allowlist** of hosts. Everything else is denied and logged. |
+| **Quarantine** | Suspicious input or output is isolated in a quarantine area instead of being processed. |
+| **Concurrency limits** | An explicit cap on simultaneous workers, with a hard maximum above which no scaling occurs without review. |
 
-## Porquê egress-allowlist (e não denylist)
+## Why egress-allowlist (and not denylist)
 
-Uma *denylist* falha por omissão — um host novo e malicioso passa. Uma **allowlist** falha
-seguro: só o que está explicitamente permitido sai; tudo o resto é negado por defeito. Para
-descobrir os hosts legítimos, corre-se a tarefa uma vez com allowlist mínima e observa-se o log
-de negações para adicionar apenas os destinos genuinamente necessários.
+A *denylist* fails by omission — a new malicious host gets through. An **allowlist** fails
+safe: only what is explicitly permitted leaves; everything else is denied by default. To
+discover the legitimate hosts, run the task once with a minimal allowlist and observe the
+denial log to add only the genuinely necessary destinations.
 
-## Instalação e go-live (conceito)
+## Installation and go-live (concept)
 
-- Backup dos paths críticos **antes** de qualquer alteração de configuração do SO.
-- Criar a árvore de trabalho com permissões restritas; a chave de assinatura com permissões `600`.
-- Provar o confinamento com um teste testemunhado por um revisor de segurança antes do go-live.
-- Toda a alteração a ficheiros críticos/arranque do SO é feita fora do fluxo automático,
-  com backup prévio.
+- Backup critical paths **before** any OS configuration change.
+- Create the working directory tree with restricted permissions; signing key with `600` permissions.
+- Prove confinement with a test witnessed by a security reviewer before go-live.
+- All changes to critical files or OS startup configuration are made outside the automated
+  flow, with a prior backup.
 
-## Princípios
+## Principles
 
-1. **Assinar o trabalho** — o worker não confia em qualquer mensagem, só nas assinadas.
-2. **Egress por allowlist** — negar por defeito, permitir por excepção observada.
-3. **Menor privilégio** — FS e rede reduzidos ao estritamente necessário.
-4. **Provar antes de confiar** — teste de confinamento testemunhado antes de produção.
+1. **Sign the work** — the worker trusts no message except signed ones.
+2. **Egress by allowlist** — deny by default, allow by observed exception.
+3. **Least privilege** — filesystem and network reduced to the strictly necessary.
+4. **Prove before trusting** — witnessed confinement test before production.

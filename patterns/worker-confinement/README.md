@@ -1,76 +1,76 @@
-# Padrão: Worker confinado com egress-allowlist
+# Pattern: Confined worker with egress-allowlist
 
-> **Âmbito.** Engenharia de um worker autónomo isolado. Allowlists de hosts reais, chaves e
-> runbooks de instalação ficam **fora** do repo. Paths e hosts fictícios (`worker.example`,
+> **Scope.** Engineering of an isolated autonomous worker. Real host allowlists, keys, and
+> installation runbooks are outside the repo. Fictional paths and hosts (`worker.example`,
 > `api.atlas-consulting.example`).
 
-## Objectivo
+## Objective
 
-Correr tarefas autónomas — potencialmente longas, potencialmente a partir de input não
-totalmente confiável — **sem** dar ao worker acesso livre ao sistema nem à rede. O worker é uma
-caixa com portas muito estreitas.
+Running autonomous tasks — potentially long-running, potentially from not fully trusted input
+— **without** giving the worker free access to the system or the network. The worker is a box
+with very narrow doors.
 
-## Arquitectura
+## Architecture
 
 ```
- Coordenador                                Worker confinado
-     │  enfileira tarefa (assinada)                │
+ Coordinator                                Confined worker
+     │  enqueues task (signed)                     │
      ▼                                             │
- ┌────────┐   verifica assinatura     ┌────────────────────┐
- │  FILA  │ ───────────────────────► │ sandbox (FS/rede    │
- └────────┘                           │ mínimos, sem exec)  │
+ ┌────────┐   verifies signature      ┌────────────────────┐
+ │ QUEUE  │ ────────────────────────► │ sandbox (minimal    │
+ └────────┘                           │ FS/network, no exec)│
      ▲                                └─────────┬───────────┘
-     │ resultado                                │ toda a saída
+     │ result                                   │ all output
      │                                          ▼
-     │                               ┌───────────────────┐
-     └──────────────────────────────│ EGRESS-PROXY        │
-                                     │ (allowlist fechada) │
+     │                               ┌────────────────────┐
+     └───────────────────────────────│ EGRESS-PROXY        │
+                                     │ (closed allowlist)  │
                                      └────────────────────┘
 ```
 
-## Componentes
+## Components
 
-| Componente | Função |
+| Component | Function |
 |---|---|
-| **Fila assinada** | O coordenador enfileira tarefas com uma assinatura (ex.: HMAC com chave partilhada). O worker só executa mensagens com assinatura **válida** — impede injecção de trabalho por quem não tem a chave. |
-| **Sandbox do worker** | Perfil de menor privilégio: filesystem e rede reduzidos ao mínimo da tarefa; execução de subprocessos negada. |
-| **Egress-proxy** | **Toda** a rede de saída passa por um proxy com **allowlist fechada** de hosts. O resto é negado e registado. |
-| **Quarentena** | Input/output suspeito é isolado numa área de quarentena, não processado. |
-| **Limites de concorrência** | Cap explícito de workers simultâneos, com um **máximo duro** acima do qual não se sobe sem revisão de segurança. |
+| **Signed queue** | The coordinator enqueues tasks with a signature (e.g.: HMAC with shared key). The worker only executes messages with a **valid** signature — prevents work injection by anyone without the key. |
+| **Worker sandbox** | Least-privilege profile: filesystem and network reduced to the task minimum; subprocess execution denied. |
+| **Egress-proxy** | **All** outbound network traffic passes through a proxy with a **closed** host allowlist. Everything else is denied and logged. |
+| **Quarantine** | Suspicious input/output is isolated in a quarantine area, not processed. |
+| **Concurrency limits** | Explicit cap on simultaneous workers, with a **hard maximum** above which you do not go without a security review. |
 
-## Verificação da mensagem (conceito)
+## Message verification (concept)
 
 ```text
-# PSEUDO-CÓDIGO — a chave e o algoritmo concretos são configuração da instalação.
+# PSEUDO-CODE — the concrete key and algorithm are installation configuration.
 msg := dequeue()
-if not verify_signature(msg.body, msg.sig, SHARED_KEY):   # SHARED_KEY nunca no repo
-    quarantine(msg); alert("assinatura inválida — possível injecção")
+if not verify_signature(msg.body, msg.sig, SHARED_KEY):   # SHARED_KEY never in the repo
+    quarantine(msg); alert("invalid signature — possible injection")
 else:
     run_confined(msg.body)
 ```
 
-## Porquê egress-allowlist (e não denylist)
+## Why an egress-allowlist (and not a denylist)
 
-Uma **denylist** falha por **omissão** — um host novo e malicioso passa porque ninguém o
-listou. Uma **allowlist** falha **seguro** — só sai o que está explicitamente permitido; tudo o
-resto é negado por defeito. Descoberta dos hosts legítimos: correr a tarefa uma vez com
-allowlist mínima e **observar o log de negações**, adicionando apenas os destinos genuinamente
-necessários.
+A **denylist** fails by **omission** — a new malicious host passes because no one listed it.
+An **allowlist** fails **safe** — only what is explicitly permitted exits; everything else is
+denied by default. Discovering the legitimate hosts: run the task once with a minimal allowlist
+and **observe the denial log**, adding only genuinely necessary destinations.
 
-## Instalação e go-live
+## Installation and go-live
 
-- **Backup** dos paths críticos **antes** de qualquer alteração de configuração do SO.
-- Árvore de trabalho com permissões restritas; chave de assinatura com permissões `600`.
-- **Provar o confinamento com um teste testemunhado** por um revisor de segurança **antes** do
-  go-live (não confiar em code-review — exigir pelo menos uma execução real que demonstre que o
-  egress bloqueia e a assinatura rejeita).
-- Alterações a ficheiros críticos / arranque do SO são feitas **fora** do fluxo automático, com
-  backup prévio.
+- **Backup** of critical paths **before** any OS configuration change.
+- Working tree with restricted permissions; signing key with `600` permissions.
+- **Prove the confinement with a witnessed test** by a security reviewer **before** go-live
+  (do not rely on code review — require at least one real execution that demonstrates egress
+  blocks and signature rejects).
+- Changes to critical files / OS startup are done **outside** the automated flow, with prior
+  backup.
 
-## Princípios
+## Principles
 
-1. **Assinar o trabalho** — o worker só confia em mensagens assinadas.
-2. **Egress por allowlist** — negar por defeito, permitir por excepção observada.
-3. **Menor privilégio** — FS e rede reduzidos ao estritamente necessário; sem subprocessos.
-4. **Provar antes de confiar** — teste de confinamento testemunhado, com execução real.
-5. **Segredos fora do repo** — chaves e allowlists reais nunca são versionados em público.
+1. **Sign the work** — the worker only trusts signed messages.
+2. **Egress by allowlist** — deny by default, permit by observed exception.
+3. **Least privilege** — FS and network reduced to the strictly necessary; no subprocesses.
+4. **Prove before trusting** — witnessed confinement test, with real execution.
+5. **Secrets outside the repo** — real keys and allowlists are never version-controlled
+   publicly.

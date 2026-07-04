@@ -1,88 +1,88 @@
-# Padrão: Heartbeat — daemon confinado com escalada por custo
+# Pattern: Heartbeat — confined daemon with cost-based escalation
 
-> **Âmbito.** Engenharia de um daemon periódico de vigilância entre sessões. Os perfis de
-> sandbox reais, canais de notificação e paths ficam **fora** do repo. Paths fictícios:
+> **Scope.** Engineering of a periodic between-session watchdog daemon. Real sandbox profiles,
+> notification channels, and paths are outside the repo. Fictional paths:
 > `/opt/atlas/assistant/{queue,state,logs}`.
 
-## Objectivo
+## Objective
 
-Um processo periódico e **confinado** que corre entre sessões interactivas, faz verificações de
-saúde, e — quando encontra algo — escala pela via **mais barata** que resolve, usando um modelo
-de linguagem só quando é mesmo preciso, e **nunca** agindo de forma irreversível sozinho.
+A periodic and **confined** process that runs between interactive sessions, performs health
+checks, and — when it finds something — escalates via the **cheapest path** that resolves it,
+using a language model only when truly needed, and **never** acting irreversibly on its own.
 
-## Escalada por custo
+## Cost-based escalation
 
 ```
-Tier-0  Verificação determinista (sem modelo)
-            │ precisa de julgamento?
+Tier-0  Deterministic check (no model)
+            │ needs judgement?
             ▼
-Tier-1  Triagem com modelo LOCAL pequeno (data-only, schema fechado, fail-safe)
-            │ precisa de decisão humana / acção de risco?
+Tier-1  Triage with a small LOCAL model (data-only, closed schema, fail-safe)
+            │ needs a human decision / risky action?
             ▼
-Tier-2  Enfileira + notifica — nunca executa a acção de risco
+Tier-2  Queue + notify — never executes the risky action itself
 ```
 
-- **Tier-0** resolve a maioria (espaço em disco, fila presa, certificado a expirar, ficheiros
-  stale) sem qualquer modelo. Barato e determinista.
-- **Tier-1** usa um modelo **local** pequeno, restrito a dados, com **resposta de schema
-  fechado** e comportamento *fail-safe* (na dúvida marca "requer atenção"). Não chama a rede
-  para fora nem executa comandos.
-- **Tier-2** **enfileira** o achado e **notifica**. A decisão fica para a próxima sessão
-  interactiva ou para um humano.
+- **Tier-0** resolves most cases (disk space, stuck queue, expiring certificate, stale files)
+  without any model. Cheap and deterministic.
+- **Tier-1** uses a small **local** model, restricted to data, with **closed-schema response**
+  and fail-safe behaviour (marks "requires attention" when in doubt). Does not call the
+  external network or execute commands.
+- **Tier-2** **queues** the finding and **notifies**. The decision is deferred to the next
+  interactive session or to a human.
 
-## Idempotência sob sobreposição
+## Idempotency under overlap
 
-Se duas sessões (ou dois ticks) coincidirem, a mesma acção não pode correr duas vezes. O padrão
-é um **claim exclusivo atómico**:
+If two sessions (or two ticks) coincide, the same action must not run twice. The pattern is an
+**atomic exclusive claim**:
 
 ```text
-# PSEUDO-CÓDIGO
+# PSEUDO-CODE
 claim := "/opt/atlas/assistant/state/tick.claim"
-if not atomic_create_exclusive(claim):   # O_CREAT|O_EXCL — falha se já existir
-    exit(0)                              # outro tick já está a tratar; sair limpo
+if not atomic_create_exclusive(claim):   # O_CREAT|O_EXCL — fails if it already exists
+    exit(0)                              # another tick is already handling it; exit clean
 try:
     do_tick()
 finally:
     release(claim)
 ```
 
-A criação exclusiva é a primitiva de exclusão mútua: quem cria o ficheiro ganha o tick; os
-outros saem sem fazer nada.
+Exclusive creation is the mutual exclusion primitive: whoever creates the file wins the tick;
+the others exit without doing anything.
 
-## Segurança operacional
+## Operational security
 
-| Mecanismo | Função |
+| Mechanism | Function |
 |---|---|
-| **Kill-switch soft** | Um ficheiro-flag faz o daemon abortar no topo do tick. Reversível sem privilégios. |
-| **Kill-switch hard** | Desregistar o serviço do gestor de arranque do SO. |
-| **Circuit-breaker** | Perante falha grave (excepções repetidas, rajada, schema rejeitado pelo Tier-1) o daemon **desactiva-se e não auto-recupera** — exige acknowledgement humano explícito. Auto-recuperar depois de uma falha grave é como um sistema entra em loop de dano. |
-| **Scrubber de segredos (fail-closed)** | A escrita na fila remove segredos; se o scrubber falhar, **não escreve** (fail-closed), em vez de escrever em claro. |
-| **Ficheiro de liveness** | Cada tick actualiza um ficheiro de liveness — a base para o watchdog recíproco (ver `../reciprocal-watchdog/`). |
+| **Kill-switch soft** | A flag file causes the daemon to abort at the top of the tick. Reversible without privileges. |
+| **Kill-switch hard** | Deregister the service from the OS boot manager. |
+| **Circuit-breaker** | On severe failure (repeated exceptions, burst, schema rejected by Tier-1) the daemon **disables itself and does not auto-recover** — it requires explicit human acknowledgement. Auto-recovering after a severe failure is how a system enters a damage loop. |
+| **Secret scrubber (fail-closed)** | Writing to the queue removes secrets; if the scrubber fails, it **does not write** (fail-closed), rather than writing in plaintext. |
+| **Liveness file** | Each tick updates a liveness file — the basis for the reciprocal watchdog (see `../reciprocal-watchdog/`). |
 
-## Confinamento
+## Confinement
 
-O daemon corre sob um **perfil de sandbox** de menor privilégio:
+The daemon runs under a **least-privilege sandbox profile**:
 
-- **Filesystem:** escrita apenas em `{fila, estado, logs}`; negado a paths críticos.
-- **Rede:** saída apenas para o modelo local e para o canal de notificação — mais nada.
-- **Processos:** execução de subprocessos negada.
-- **Base de dados:** read-only.
+- **Filesystem:** writes only to `{queue, state, logs}`; denied on critical paths.
+- **Network:** egress only to the local model and notification channel — nothing else.
+- **Processes:** subprocess execution denied.
+- **Database:** read-only.
 
-> O bloco de perfil de sandbox real (as regras de deny/allow concretas) **não** faz parte deste
-> repo — é topologia do sistema de confiança. Só o *conceito* de confinamento sai.
+> The real sandbox profile block (the concrete deny/allow rules) is **not** part of this
+> repo — it is trust-system topology. Only the *concept* of confinement is shared.
 
-## Consumo lado-sessão
+## Session-side consumption
 
-No arranque de uma sessão interactiva, o coordenador **drena a fila**: lê os registos
-estruturados, move cada um para "processado" de forma **atómica**, apresenta os alertas ao
-utilizador e reconcilia o histórico. O daemon **não** escreve no store transaccional — a sessão
-interactiva é que consolida. Assim o daemon nunca precisa de privilégio de escrita sobre o
-estado autoritativo.
+At the start of an interactive session, the coordinator **drains the queue**: it reads the
+structured records, moves each one to "processed" **atomically**, presents alerts to the user,
+and reconciles the history. The daemon does **not** write to the transactional store — the
+interactive session does the consolidation. This way the daemon never needs write privilege
+over the authoritative state.
 
-## Princípios
+## Principles
 
-1. **O mais barato que resolve** — determinista → local → enfileirar.
-2. **Nunca age de forma irreversível sozinho.**
-3. **Confinado por desenho** — FS e rede mínimos; sem subprocessos.
-4. **Falha grave desactiva; não auto-recupera.**
-5. **Observável** — log append-only + ficheiro de liveness por tick.
+1. **The cheapest that resolves** — deterministic → local → queue.
+2. **Never acts irreversibly on its own.**
+3. **Confined by design** — minimal FS and network; no subprocesses.
+4. **Severe failure disables; does not auto-recover.**
+5. **Observable** — append-only log + liveness file per tick.

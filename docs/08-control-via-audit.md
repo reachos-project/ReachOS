@@ -1,64 +1,63 @@
-# 08 — Controlo via auditoria
+# 08 — Control via audit
 
-Um princípio de governança de dados que atravessa o sistema: preferir **escrita livre,
-auditável e reversível** a **aprovação prévia obrigatória**. A aprovação em cada escrita cria
-fricção e, na prática, leva a que se contorne ou se pare o fluxo. A auditoria mantém o controlo
-sem travar o trabalho.
+A data governance principle that runs through the whole system: prefer **free, auditable,
+and reversible writes** over **mandatory prior approval**. Approval on every write creates
+friction and, in practice, leads people to bypass or stall the flow. Audit maintains control
+without blocking work.
 
-## O trade-off
+## The trade-off
 
-| Abordagem | Custo | Risco residual |
+| Approach | Cost | Residual risk |
 |---|---|---|
-| **Gating** (aprovar antes de cada escrita) | Alta fricção; interrompe o fluxo constantemente. | Baixo — mas só se as pessoas não contornarem o gate. |
-| **Auditoria** (escrever livre + registar + rever) | Baixa fricção. | Contido por detecção-e-reversão dentro de latência limitada. |
+| **Gating** (approve before each write) | High friction; constantly interrupts the flow. | Low — but only if people do not bypass the gate. |
+| **Audit** (free write + log + review) | Low friction. | Contained by detect-and-revert within a bounded latency. |
 
-A escolha depende de **onde está o risco real**. A regra prática: colocar o gate destrutivo
-onde uma acção é **irreversível**, e usar auditoria onde a acção é **reversível**.
+The choice depends on **where the real risk lies**. The practical rule: place the hard gate
+where an action is **irreversible**, and use audit where the action is **reversible**.
 
-## Onde aplicar cada um
+## Where to apply each
 
-- **Gate duro (bloqueio prévio):** operações irreversíveis — apagar/reescrever configuração
-  crítica, expor segredos. Aqui o custo de errar é catastrófico e o bloqueio justifica-se.
-- **Auditoria (escrita livre + revisão ex-post):** a maioria das escritas de conteúdo —
-  memórias, notas, registos. Uma entrada errada é sempre reversível porque a fonte-de-verdade é
-  markdown e existe um histórico append-only.
+- **Hard gate (prior block):** irreversible operations — deleting/overwriting critical
+  configuration, exposing secrets. Here the cost of error is catastrophic and blocking is justified.
+- **Audit (free write + ex-post review):** the majority of content writes —
+  memories, notes, logs. A wrong entry is always reversible because the source of truth is
+  markdown and an append-only history exists.
 
-## Padrão de auditoria
+## Audit pattern
 
 ```
-Escrita  ──►  Registo na fila de auditoria (conteúdo real, não só sumário)
+Write  ──►  Log in the audit queue (actual content, not just a summary)
                      │
                      ▼
-        Cruzamento com o histórico de actividade
-                     │  (heurística: anomalias — segredos, URLs, injecção)
+        Cross-reference with the activity history
+                     │  (heuristic: anomalies — secrets, URLs, injection)
                      ▼
-        Só as anomalias são trazidas à atenção do humano
+        Only anomalies are surfaced to the human
                      │
                      ▼
-        Revisão on-demand + reversão trivial (SoT em markdown)
+        On-demand review + trivial revert (SoT in markdown)
 ```
 
-- A escrita continua **livre** — a fila não é um gate.
-- A fila guarda o **conteúdo real** para permitir revisão fiel, não apenas um resumo.
-- No arranque de sessão, mostra-se apenas a **contagem** e as **anomalias** — não um ecrã de
-  revisão por sessão.
-- A auditoria completa é **on-demand**. A reversibilidade total vem da fonte-de-verdade em
-  markdown + histórico de actividade.
+- Writing stays **free** — the queue is not a gate.
+- The queue stores the **actual content** to enable faithful review, not just a summary.
+- At session startup, only the **count** and **anomalies** are shown — not a per-session
+  review screen.
+- Full audit is **on-demand**. Complete reversibility comes from the markdown source of truth
+  + activity history.
 
-## Defence-in-depth para a própria auditoria
+## Defence-in-depth for the audit itself
 
-Cruzar duas fontes: os eventos registados no histórico **versus** os items na fila. Um evento
-de escrita sem item correspondente na fila sinaliza um registo falhado — a auditoria audita-se
-a si própria.
+Cross-reference two sources: events logged in the history **versus** items in the queue. A
+write event with no corresponding queue item signals a failed log — the audit audits itself.
 
-## Cuidado com dados sensíveis
+## Caution with sensitive data
 
-Se a fila de auditoria duplica conteúdo em claro, então **nenhum conteúdo sensível** (dados
-pessoais especiais, segredos, chaves de re-identificação) pode viver nas memórias auditadas —
-esses dados pertencem a stores próprios, nunca a uma memória de texto livre.
+If the audit queue duplicates content in plaintext, then **no sensitive content** (special
+personal data, secrets, re-identification keys) may live in the audited memories —
+that data belongs in dedicated stores, never in a free-text memory.
 
-## Princípio
+## Principle
 
-> Controlo não é o mesmo que bloqueio. Escrita livre + auditável + reversível dá mais controlo
-> real do que uma fila de aprovações que as pessoas aprendem a contornar — desde que o gate
-> duro proteja o que é genuinamente irreversível.
+> Control is not the same as blocking. Free + auditable + reversible writes give more real
+> control than an approval queue that people learn to bypass — provided the hard gate protects
+> what is genuinely irreversible.

@@ -1,77 +1,78 @@
-# 01 — Orquestração
+# 01 — Orchestration
 
-O coordenador governa-se por um pequeno conjunto de regras de ouro. São propositadamente
-poucas e estáveis — a complexidade vive nos agentes, não no coordenador.
+The coordinator is governed by a small set of golden rules. They are intentionally
+few and stable — complexity lives in the agents, not in the coordinator.
 
-## Regra 1 — Delegação total
+## Rule 1 — Total delegation
 
-O coordenador **nunca** faz trabalho operacional directamente. Delega sempre para o agente
-especializado adequado. Única excepção: micro-tarefas de configuração (< 5 min) em ficheiros
-do próprio sistema.
+The coordinator **never** does operational work directly. It always delegates to the
+appropriate specialist agent. The only exception: configuration micro-tasks (< 5 min)
+in the system's own files.
 
-> *Porquê:* concentrar execução no coordenador re-satura o contexto e apaga a especialização.
+> *Why:* concentrating execution in the coordinator re-saturates the context and erases specialisation.
 
-## Regra 2 — Cadeia de comando
+## Rule 2 — Chain of command
 
-O fluxo de qualquer pedido é sempre o mesmo:
+The flow of any request is always the same:
 
 ```
-Utilizador → Coordenador → Agente → Coordenador → Utilizador
+User → Coordinator → Agent → Coordinator → User
 ```
 
-Nenhum agente comunica directamente com o utilizador. Toda a comunicação passa pelo coordenador,
-que faz a síntese final. Isto garante um único ponto de coerência e de controlo de qualidade.
+No agent communicates directly with the user. All communication passes through the coordinator,
+which performs the final synthesis. This guarantees a single point of coherence and quality control.
 
-## Regra 3 — Rastreabilidade
+## Rule 3 — Traceability
 
-Toda a tarefa, delegação e deliverable é registada num store transaccional (ver
-`examples/db/schema.example.sql`). O utilizador pode consultar o histórico a qualquer momento.
-O registo mínimo por tarefa:
+Every task, delegation, and deliverable is logged in a transactional store (see
+`examples/db/schema.example.sql`). The user can query the history at any time.
+The minimum log per task:
 
-1. Criar a tarefa ao receber o pedido.
-2. Registar cada delegação entre agentes.
-3. Actualizar a tarefa ao concluir (estado + resumo do resultado).
-4. Registar o deliverable quando um ficheiro é entregue.
+1. Create the task upon receiving the request.
+2. Log each delegation between agents.
+3. Update the task on completion (status + result summary).
+4. Log the deliverable when a file is delivered.
 
-## Regra 4 — Quality gate
+## Rule 4 — Quality gate
 
-Antes de entregar qualquer output, o coordenador corre um checklist de qualidade
-(`docs/04-quality-gate.md`). Se o deliverable não passa, não sai. O resultado do gate é
-registado para permitir métricas longitudinais de qualidade.
+Before delivering any output, the coordinator runs a quality checklist
+(`docs/04-quality-gate.md`). If the deliverable does not pass, it does not go out. The gate
+result is logged to enable longitudinal quality metrics.
 
-## Regra 5 — Privacidade e segurança
+## Rule 5 — Privacy and security
 
-Respeitar a privacidade do utilizador. Nunca expor dados sensíveis. Os agentes só escrevem nos
-seus workspaces designados; qualquer escrita fora disso é bloqueada por guardrail (`docs/05`).
+Respect user privacy. Never expose sensitive data. Agents only write in their designated
+workspaces; any write outside that is blocked by a guardrail (`docs/05`).
 
-## Regra 6 — Validação pré-alteração (para config crítica)
+## Rule 6 — Pre-change validation (for critical config)
 
-Antes de aplicar qualquer alteração a ficheiros de configuração críticos ("Tier-1"), correr um
-*dry-run* que valida as assunções da alteração:
+Before applying any change to critical configuration files ("Tier-1"), run a
+*dry-run* that validates the change's assumptions:
 
-- Os items a **remover** existem mesmo no estado actual?
-- Os items a **adicionar** já lá estão (alteração redundante)?
-- A estrutura assumida ainda se verifica?
+- Do the items to **remove** actually exist in the current state?
+- Are the items to **add** already there (redundant change)?
+- Does the assumed structure still hold?
 
-Se há divergência entre o estado assumido e o real, **parar** e re-avaliar antes de aplicar.
-Isto evita regressões causadas por alterações desenhadas contra um estado obsoleto.
+If there is a divergence between the assumed state and the real one, **stop** and re-evaluate
+before applying. This prevents regressions caused by changes designed against stale state.
 
-## Regra 7 — Backup antes de operação destrutiva
+## Rule 7 — Backup before destructive operations
 
-Antes de correr qualquer processo capaz de apagar/mover/truncar ficheiros de configuração
-críticos, criar **backup verificável** (arquivo + manifesto de hashes) e confirmar a integridade
-do backup **antes** de prosseguir. Ler e inspeccionar semanticamente qualquer script que toque
-esses paths — validação de sintaxe não chega.
+Before running any process capable of deleting, moving, or truncating critical configuration
+files, create a **verifiable backup** (archive + hash manifest) and confirm backup integrity
+**before** proceeding. Read and semantically inspect any script that touches those paths —
+syntax validation is not enough.
 
-> *Porquê:* um comando destrutivo embutido num script não passa pela camada de autorização que
-> só intercepta no limiar coordenador→ferramenta. Sem backup, a perda é irreversível.
+> *Why:* a destructive command embedded in a script does not pass through the authorisation
+> layer that only intercepts at the coordinator→tool boundary. Without a backup, the loss is
+> irreversible.
 
-## Contratação de novos agentes (pipeline)
+## Hiring new agents (pipeline)
 
-Quando é preciso um domínio que nenhum agente cobre:
+When a domain is needed that no existing agent covers:
 
-1. **Pesquisa de competências** — um agente investiga o perfil ideal e produz um relatório.
-2. **Desenho da persona** — outro agente desenha a identidade e escreve o ficheiro do agente.
-3. **Confirmação** — o coordenador regista o novo agente e actualiza o roster.
+1. **Skills research** — an agent investigates the ideal profile and produces a report.
+2. **Persona design** — another agent designs the identity and writes the agent file.
+3. **Confirmation** — the coordinator registers the new agent and updates the roster.
 
-Ver o template em `templates/agents/agent.template.md`.
+See the template at `templates/agents/agent.template.md`.

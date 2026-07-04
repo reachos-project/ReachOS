@@ -1,32 +1,32 @@
 -- schema.example.sql
--- Nomenclatura de rastreabilidade (procedural_memory, activity_history) partilhada
--- com o upstream genesis (Apache-2.0) — ver NOTICE. Reprodução consciente e atribuída.
--- Modelo de dados CONCEPTUAL e FICTÍCIO do store transaccional que dá rastreabilidade
--- ao sistema (Regra 3). Serve de referência — adapta ao teu motor de base de dados.
--- Não contém dados reais. Os nomes de colunas são ilustrativos.
+-- The traceability nomenclature (procedural_memory, activity_history) is shared
+-- with the upstream genesis (Apache-2.0) — see NOTICE. Conscious and attributed reproduction.
+-- CONCEPTUAL and FICTIONAL data model of the transactional store that provides traceability
+-- for the system (Rule 3). Serves as a reference — adapt to your database engine.
+-- Contains no real data. Column names are illustrative.
 
--- Tarefas delegadas pelo coordenador.
+-- Tasks delegated by the coordinator.
 CREATE TABLE tasks (
     id              INTEGER PRIMARY KEY,
     title           TEXT NOT NULL,
-    assigned_to     TEXT,                 -- slug do agente
+    assigned_to     TEXT,                 -- agent slug
     status          TEXT NOT NULL,        -- open | in_progress | completed | cancelled
     result_summary  TEXT,
     created_at      TEXT NOT NULL,
     updated_at      TEXT
 );
 
--- Audit trail de cada delegação entre coordenador e agentes.
+-- Audit trail of each delegation between the coordinator and agents.
 CREATE TABLE interactions (
     id          INTEGER PRIMARY KEY,
     task_id     INTEGER REFERENCES tasks(id),
-    from_actor  TEXT,                     -- ex.: coordenador
-    to_actor    TEXT,                     -- ex.: slug do agente
+    from_actor  TEXT,                     -- e.g.: coordinator
+    to_actor    TEXT,                     -- e.g.: agent slug
     summary     TEXT,
     created_at  TEXT NOT NULL
 );
 
--- Registo dos agentes activos.
+-- Registry of active agents.
 CREATE TABLE agents (
     slug        TEXT PRIMARY KEY,
     display_name TEXT,
@@ -34,20 +34,20 @@ CREATE TABLE agents (
     active      INTEGER DEFAULT 1
 );
 
--- Deliverables entregues ao utilizador (alimenta métricas de quality gate).
+-- Deliverables handed to the user (feeds quality gate metrics).
 CREATE TABLE deliverables (
     id                        INTEGER PRIMARY KEY,
     task_id                   INTEGER REFERENCES tasks(id),
     filepath                  TEXT,
     deliverable_type          TEXT,
-    quality_score             INTEGER,    -- 1..12 (estrutural + conteúdo)
+    quality_score             INTEGER,    -- 1..12 (structural + content)
     revision_rounds INTEGER,
-    user_rating  INTEGER,    -- 1..10, opcional
+    user_rating  INTEGER,    -- 1..10, optional
     tags                      TEXT,       -- JSON array
     created_at                TEXT NOT NULL
 );
 
--- Padrões aprendidos (procedural memory) — sucesso/falha por tipo de tarefa.
+-- Learned patterns (procedural memory) — success/failure by task type.
 CREATE TABLE procedural_memory (
     id              INTEGER PRIMARY KEY,
     trigger_pattern TEXT,
@@ -57,7 +57,7 @@ CREATE TABLE procedural_memory (
     last_used       TEXT
 );
 
--- Histórico de actividade append-only (auditoria e reversibilidade).
+-- Append-only activity history (audit and reversibility).
 CREATE TABLE activity_history (
     id           INTEGER PRIMARY KEY,
     actor        TEXT,
@@ -68,7 +68,7 @@ CREATE TABLE activity_history (
     occurred_at  TEXT NOT NULL
 );
 
--- Vista de saúde do contexto (exemplo de agregação para diagnóstico).
+-- Context health view (example aggregation for diagnostics).
 CREATE VIEW v_system_health AS
 SELECT
     (SELECT COUNT(*) FROM tasks WHERE status = 'open')        AS open_tasks,

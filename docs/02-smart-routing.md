@@ -1,68 +1,67 @@
-# 02 — Encaminhamento inteligente (5 rotas)
+# 02 — Smart routing (5 routes)
 
-O coordenador classifica **cada** pedido numa de cinco rotas. A classificação é automática e
-baseia-se na complexidade, no tipo de tarefa e nos agentes disponíveis.
+The coordinator classifies **every** request into one of five routes. Classification is
+automatic and based on complexity, task type, and available agents.
 
-## Rota 1 — Directa (sem agente)
+## Route 1 — Direct (no agent)
 
-**Quando:** perguntas sobre o estado do sistema, status de tarefas, aprovações simples,
-qualquer coisa que o coordenador responde com informação que já tem.
-**Acção:** resposta imediata, sem delegação.
-**Exemplos:** *"Quantos agentes temos?"* · *"Qual o estado da tarefa 3?"* · *"Aprovado."*
+**When:** questions about system state, task status, simple approvals, anything the coordinator
+answers with information it already has.
+**Action:** immediate response, no delegation.
+**Examples:** *"How many agents do we have?"* · *"What is the status of task 3?"* · *"Approved."*
 
-## Rota 2 — Micro-edição (coordenador executa)
+## Route 2 — Micro-edit (coordinator executes)
 
-**Quando:** edições simples em ficheiros de configuração do sistema, < 5 min, sem pesquisa
-nem criação de conteúdo.
-**Acção:** o coordenador executa directamente com leitura + edição.
-**Exemplos:** *"Corrige este typo no ficheiro de regras."* · *"Adiciona esta entrada ao roster."*
+**When:** simple edits to system configuration files, < 5 min, no research or content creation.
+**Action:** the coordinator executes directly with read + edit.
+**Examples:** *"Fix this typo in the rules file."* · *"Add this entry to the roster."*
 
-## Rota 3 — Agente-único
+## Route 3 — Single-agent
 
-**Quando:** o domínio corresponde claramente a um agente existente; deliverable único e claro.
-**Acção:** o coordenador delega ao agente adequado e regista a tarefa.
+**When:** the domain clearly matches an existing agent; single, clear deliverable.
+**Action:** the coordinator delegates to the appropriate agent and logs the task.
 
-Cada organização mantém um **mapa de delegação** — domínio → agente. Exemplo genérico:
+Each organisation maintains a **delegation map** — domain → agent. Generic example:
 
-| Domínio do pedido | Agente |
+| Request domain | Agent |
 |---|---|
-| Análise de mercado, estratégia | `{{AGENT_SLUG_STRATEGY}}` |
-| Redacção e edição de relatórios | `{{AGENT_SLUG_EDITOR}}` |
-| Curadoria de conhecimento, memória | `{{AGENT_SLUG_KNOWLEDGE}}` |
+| Market analysis, strategy | `{{AGENT_SLUG_STRATEGY}}` |
+| Report writing and editing | `{{AGENT_SLUG_EDITOR}}` |
+| Knowledge curation, memory | `{{AGENT_SLUG_KNOWLEDGE}}` |
 
-Ver um mapa instanciado em `examples/atlas-consulting/routing-map.md`.
+See an instantiated map at `examples/atlas-consulting/routing-map.md`.
 
-## Rota 4 — Pipeline (contratação)
+## Route 4 — Pipeline (hiring)
 
-**Quando:** o pedido exige um domínio que nenhum agente cobre.
-**Acção:** pipeline de contratação (pesquisa de competências → desenho de persona → confirmação),
-descrito em `docs/01-orchestration.md`.
+**When:** the request requires a domain that no agent covers.
+**Action:** hiring pipeline (skills research → persona design → confirmation),
+described in `docs/01-orchestration.md`.
 
-## Rota 5 — Paralelo
+## Route 5 — Parallel
 
-**Quando:** o pedido tem várias sub-tarefas independentes, cada uma para um agente diferente.
-**Acção:** decompor, lançar agentes em simultâneo, sintetizar no fim.
-**Exemplo:** *"Analisa o mercado X **e** prepara material sobre o tema Y"* → dois agentes em paralelo.
+**When:** the request has several independent sub-tasks, each for a different agent.
+**Action:** decompose, launch agents simultaneously, synthesise at the end.
+**Example:** *"Analyse market X **and** prepare material on topic Y"* → two agents in parallel.
 
-## Regras de fallback
+## Fallback rules
 
-1. **Domínio ambíguo** — cabe em mais que um agente → perguntar ao utilizador para clarificar.
-2. **Agente inexistente** — activar a Rota 4 (contratação).
-3. **Pedido demasiado vago** — pedir o resultado desejado antes de delegar.
-4. **Erro de agente** — tentar uma vez mais com instruções refinadas; se falhar, escalar ao utilizador.
+1. **Ambiguous domain** — fits more than one agent → ask the user to clarify.
+2. **Non-existent agent** — activate Route 4 (hiring).
+3. **Request too vague** — ask for the desired outcome before delegating.
+4. **Agent error** — retry once with refined instructions; if it fails, escalate to the user.
 
-## Flag "quality-sensitive"
+## "quality-sensitive" flag
 
-Para deliverables visuais, para terceiros, ou de publicação, aplicar um gate de qualidade mais
-exigente e sugerir revisão humana antes de finalizar (ver `docs/04-quality-gate.md`).
+For visual deliverables, for third parties, or for publication, apply a stricter quality gate
+and suggest human review before finalising (see `docs/04-quality-gate.md`).
 
-## Diagrama de decisão
+## Decision diagram
 
 ```
-Pedido
-  ├─ Responde-se com info já disponível? ─────► Rota 1
-  ├─ É micro-edição de config (<5 min)? ──────► Rota 2
-  ├─ Domínio claro + agente existe? ────────► Rota 3
-  ├─ Precisa de agente que não existe? ───────► Rota 4
-  └─ Várias sub-tarefas independentes? ───────► Rota 5
+Request
+  ├─ Answerable from existing info? ──────────────────► Route 1
+  ├─ Micro-edit to config (< 5 min)? ─────────────────► Route 2
+  ├─ Clear domain + agent exists? ─────────────────────► Route 3
+  ├─ Requires an agent that does not exist? ───────────► Route 4
+  └─ Multiple independent sub-tasks? ──────────────────► Route 5
 ```

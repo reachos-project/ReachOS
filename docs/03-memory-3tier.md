@@ -1,60 +1,59 @@
-# 03 — Memória 3-tier
+# 03 — 3-tier memory
 
-A equipa partilha uma memória persistente em três níveis. O princípio orientador é
-**markdown-as-source-of-truth**: os ficheiros markdown são autoritativos; qualquer índice
-(vectorial, base de dados) é uma camada **derivada** que nunca os substitui.
+The team shares a persistent memory across three tiers. The guiding principle is
+**markdown-as-source-of-truth**: markdown files are authoritative; any index
+(vector, database) is a **derived** layer that never supersedes them.
 
-## Os três níveis
+## The three tiers
 
-| Nível | Descrição | Acesso |
+| Tier | Description | Access |
 |---|---|---|
-| **Hot** | Perfil do utilizador, preferências, regras. Carregado em **cada** sessão. | Ficheiro markdown lido no arranque. |
-| **Warm** | Decisões de projecto, padrões aprendidos, histórico de contratações. | Markdown, consultável on-demand por leitura, grep ou pesquisa semântica. |
-| **Cold** | Arquivo histórico semântico + grafo de conhecimento temporal. | Via ferramentas de pesquisa/grafo do índice derivado. |
+| **Hot** | User profile, preferences, rules. Loaded in **every** session. | Markdown file read at startup. |
+| **Warm** | Project decisions, learned patterns, hiring history. | Markdown, queryable on-demand by read, grep, or semantic search. |
+| **Cold** | Semantic historical archive + temporal knowledge graph. | Via the derived index's search/graph tools. |
 
-## Fonte-de-verdade e índice derivado
+## Source of truth and derived index
 
 ```
-   Utilizador edita markdown
+   User edits markdown
             │
             ▼
-   ETL incremental re-mineia   (idempotente, por hash de conteúdo)
+   Incremental ETL re-mines   (idempotent, by content hash)
             │
             ▼
-   Índice vectorial + grafo    ← camada derivada (retrieval, nunca SoT)
+   Vector index + graph       ← derived layer (retrieval, never SoT)
 ```
 
-- O utilizador edita **markdown**. Um processo de ETL incremental re-mineia e alinha o índice.
-- O ETL é **idempotente**: o mesmo conteúdo produz o mesmo identificador (hash), pelo que
-  re-correr não duplica.
-- O índice serve **recall semântico**; para recall verbatim (um ID, uma palavra rara) usa-se
-  pesquisa determinística (grep) sobre a SoT.
+- The user edits **markdown**. An incremental ETL process re-mines and realigns the index.
+- The ETL is **idempotent**: the same content produces the same identifier (hash), so
+  re-running does not create duplicates.
+- The index serves **semantic recall**; for verbatim recall (an ID, a rare term) use
+  deterministic search (grep) against the SoT.
 
-## Regras de fluxo
+## Flow rules
 
-- **Promover warm → hot:** editar o ficheiro hot quando uma memória passa a ser necessária em
-  cada sessão.
-- **Despromover hot → warm:** remover a referência do ficheiro hot; o ficheiro warm fica intacto.
-- **Decay:** não é automático — o utilizador valida em revisões periódicas. Ficheiros obsoletos
-  ficam minados no índice e continuam recuperáveis.
+- **Promote warm → hot:** edit the hot file when a memory becomes needed in every session.
+- **Demote hot → warm:** remove the reference from the hot file; the warm file stays intact.
+- **Decay:** not automatic — the user validates in periodic reviews. Stale files remain
+  mined in the index and continue to be retrievable.
 
-## Quando usar cada mecanismo de retrieval
+## When to use each retrieval mechanism
 
-| Situação | Mecanismo |
+| Situation | Mechanism |
 |---|---|
-| Ficheiro conhecido pelo nome/path | Leitura directa. |
-| Termo verbatim, ID concreto, jargão raro | Pesquisa determinística (grep) sobre a SoT. |
-| Pergunta semântica/conceptual cross-corpus | Pesquisa vectorial (índice derivado). |
-| Facto sobre uma pessoa/projecto/relação | Consulta ao grafo de conhecimento. |
-| Estado operacional (tarefas, entregas) | Base de dados transaccional (não o índice semântico). |
+| File known by name/path | Direct read. |
+| Verbatim term, concrete ID, rare jargon | Deterministic search (grep) against the SoT. |
+| Semantic/conceptual cross-corpus question | Vector search (derived index). |
+| Fact about a person/project/relationship | Knowledge graph query. |
+| Operational state (tasks, deliverables) | Transactional database (not the semantic index). |
 
-> *Regra dura:* nunca escrever manualmente no índice informação que existe num markdown.
-> O fluxo é sempre editar markdown → ETL re-mineia → índice alinha. Escritas manuais
-> introduzem *drift*.
+> *Hard rule:* never manually write into the index information that exists in a markdown file.
+> The flow is always: edit markdown → ETL re-mines → index realigns. Manual writes
+> introduce *drift*.
 
-## Trabalho multi-turn resiliente a falhas
+## Failure-resilient multi-turn work
 
-Para iterações longas com risco de interrupção (debugging em terreno, sessões muito longas),
-manter um **log de iteração** com estado actual, o que falhou, o que funcionou e pendentes.
-Marcá-lo como activo num índice de topo, para que uma sessão retomada o leia primeiro.
-Remover a marca quando a iteração fecha.
+For long iterations with a risk of interruption (in-the-field debugging, very long sessions),
+maintain an **iteration log** with the current state, what failed, what worked, and pending items.
+Mark it as active in a top-level index so that a resumed session reads it first.
+Remove the mark when the iteration closes.

@@ -1,28 +1,28 @@
-# Exemplos de guardrails (esqueletos)
+# Guardrail examples (skeletons)
 
-> **Leia primeiro.** Estes ficheiros são **esqueletos ilustrativos**, não hooks prontos a
-> correr. Servem para mostrar a *forma* de um guardrail — a estrutura, a convenção de saída, o
-> ponto de decisão. **Não** contêm as regras de detecção reais de nenhum sistema:
+> **Read this first.** These files are **illustrative skeletons**, not hooks ready to run.
+> They exist to show the *shape* of a guardrail — the structure, the exit convention, the
+> decision point. They do **not** contain the real detection rules of any system:
 >
-> - Os conjuntos de verbos destrutivos, os globs de paths críticos e as expressões de detecção
->   estão representados por **tokens** (`{{...}}`, `<...>`) que **cada instalação preenche**.
-> - Os ficheiros `.pseudo.*` **não são executáveis como estão** — os tokens partem
->   deliberadamente qualquer tentativa de execução directa. Isto é intencional: um exemplo de
->   segurança não deve poder ser corrido às cegas contra um sistema real.
+> - The sets of destructive verbs, the critical-path globs and the detection expressions are
+>   represented by **tokens** (`{{...}}`, `<...>`) that **each installation fills in**.
+> - The `.pseudo.*` files are **not executable as they stand** — the tokens deliberately break
+>   any attempt at direct execution. This is intentional: a security example should not be
+>   runnable blindly against a real system.
 >
-> Ver `patterns/defense-in-depth/` para a explicação do porquê as assinaturas concretas ficam
-> privadas (evasão) e o padrão fica público (Kerckhoffs).
+> See `patterns/defense-in-depth/` for why the concrete signatures stay private (evasion)
+> while the pattern stays public (Kerckhoffs).
 
-## Ficheiros
+## Files
 
-| Ficheiro | Camada | O que ilustra |
+| File | Layer | What it illustrates |
 |---|---|---|
-| `workspace-enforcement.pseudo.sh` | C1/C2 | Um agente só escreve no seu workspace; escrita fora → negar. |
-| `content-inspection.pseudo.py` | C2 | Inspecção de conteúdo pré-execução com extracção robusta e fail-safe. |
-| `sql-readonly.pseudo.sh` | C2 | Base de dados read-only por defeito; só leituras passam. |
+| `workspace-enforcement.pseudo.sh` | C1/C2 | An agent writes only inside its workspace; writes outside → deny. |
+| `content-inspection.pseudo.py` | C2 | Pre-execution content inspection with robust extraction and fail-safe behaviour. |
+| `sql-readonly.pseudo.sh` | C2 | Database read-only by default; only reads pass. |
 
-## Convenção de saída (comum a todos)
+## Exit convention (common to all)
 
-- `exit 0` → **permitir** a acção.
-- `exit != 0` → **bloquear**, com a razão escrita no canal de erro (stderr).
-- Em caso de dúvida (input malformado, parser falha) → **bloquear** (fail-safe / over-block).
+- `exit 0` → **allow** the action.
+- `exit != 0` → **block**, with the reason written to the error channel (stderr).
+- When in doubt (malformed input, parser failure) → **block** (fail-safe / over-block).

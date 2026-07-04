@@ -1,54 +1,53 @@
-# Padrão: Watchdog recíproco (quem vigia o vigia)
+# Pattern: Reciprocal watchdog (who watches the watcher)
 
-> **Âmbito.** Engenharia do problema "quem vigia o vigilante". Canais de alarme reais e
-> identidades de máquina ficam fora do repo.
+> **Scope.** Engineering the "who watches the watchman" problem. Real alarm channels and
+> machine identities are outside the repo.
 
-## Problema
+## Problem
 
-Um daemon de vigilância que morre **em silêncio** é pior do que não ter daemon nenhum: dá uma
-falsa sensação de cobertura. Um processo confinado pode ser morto pelo SO, entrar em
-circuit-breaker, ou ficar preso sem escrever. É preciso um sinal independente que detecte a
-**ausência** do vigilante.
+A watchdog daemon that dies **silently** is worse than having no daemon at all: it gives a
+false sense of coverage. A confined process can be killed by the OS, enter a circuit-breaker,
+or become stuck without writing. An independent signal is needed that detects the **absence**
+of the watchdog.
 
-## Padrão
+## Pattern
 
-Dois sinais de liveness **independentes**, e um alarme que vive **fora** do sistema que está a
-ser vigiado:
+Two **independent** liveness signals, and an alarm that lives **outside** the system being
+watched:
 
 ```
- Daemon vigiado  ──► actualiza ficheiro de liveness a cada tick
+ Watched daemon  ──► updates a liveness file on every tick
                                   │
       ┌───────────────────────────┘
       ▼
- Watchdog  ──► lê a idade do ficheiro de liveness
-      │   está stale (não actualiza há > N)?
+ Watchdog  ──► reads the age of the liveness file
+      │   is it stale (not updated for > N)?
       ▼
- Empurra STALE / DEAD para um canal de alarme INDEPENDENTE do daemon vigiado
+ Pushes STALE / DEAD to an alarm channel INDEPENDENT of the watched daemon
 ```
 
-Regras de desenho:
+Design rules:
 
-- **Independência.** O watchdog não pode partilhar o destino do que vigia. Se ambos morrem pela
-  mesma causa (mesmo processo, mesmo cron, mesma sandbox), não há vigilância real.
-- **Estado fora do TCB vigiado.** O estado de liveness que o watchdog consulta vive **fora** do
-  sistema de confiança que está a ser vigiado — senão comprometer o alvo compromete o
-  observador.
-- **Empurrar, não puxar.** O watchdog **empurra** o alarme (push) para um canal que o operador
-  vê mesmo com o resto do sistema em baixo — não espera que alguém vá **puxar** (pull) o estado.
-- **Alarme burro e externo.** A última camada é um alarme simples, externo e bem testado — não
-  outra peça inteligente que também possa falhar.
+- **Independence.** The watchdog cannot share the fate of what it watches. If both die from
+  the same cause (same process, same cron, same sandbox), there is no real oversight.
+- **State outside the watched TCB.** The liveness state the watchdog consults lives **outside**
+  the trust system being watched — otherwise compromising the target compromises the observer.
+- **Push, not pull.** The watchdog **pushes** the alarm to a channel the operator sees even
+  with the rest of the system down — it does not wait for someone to **pull** the state.
+- **Dumb and external alarm.** The final layer is a simple, external, and well-tested alarm —
+  not another intelligent component that can also fail.
 
-## A regressão infinita, e onde parar
+## The infinite regress, and where to stop
 
-"Quem vigia o watchdog?" é uma regressão infinita. Não se resolve com mais uma camada
-inteligente — resolve-se fazendo a **última** camada um alarme **externo, burro e trivialmente
-verificável** (ex.: um serviço de notificação de terceiros que dispara se não receber um
-sinal periódico). A fiabilidade vem da simplicidade e da externalidade, não de mais lógica.
+"Who watches the watchdog?" is an infinite regress. It is not solved by another intelligent
+layer — it is solved by making the **final** layer an **external, dumb, and trivially
+verifiable** alarm (e.g.: a third-party notification service that fires if it does not receive
+a periodic signal). Reliability comes from simplicity and externalness, not from more logic.
 
-## Princípios
+## Principles
 
-1. **Detectar ausência, não só erro** — o silêncio é o modo de falha perigoso.
-2. **Independência de destino** — vigia e vigiado não podem morrer juntos.
-3. **Estado do observador fora do TCB vigiado.**
-4. **Push para canal que sobrevive à queda do sistema.**
-5. **A camada final é externa, burra e testada** — é aí que a regressão para.
+1. **Detect absence, not just errors** — silence is the dangerous failure mode.
+2. **Fate independence** — watcher and watched cannot die together.
+3. **Observer state outside the watched TCB.**
+4. **Push to a channel that survives the system going down.**
+5. **The final layer is external, dumb, and tested** — that is where the regress stops.

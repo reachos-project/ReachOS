@@ -1,35 +1,35 @@
-# Regra: {{RULE_TITLE}}
+# Rule: {{RULE_TITLE}}
 
-**Activo desde:** {{RULE_DATE}}
-**Aplica-se a:** {{RULE_SCOPE}}          <!-- ex.: todos os agentes; só o coordenador; um domínio -->
-**Tipo:** {{RULE_TYPE}}                  <!-- ex.: bloqueante no quality gate; guia; convenção -->
+**Active since:** {{RULE_DATE}}
+**Applies to:** {{RULE_SCOPE}}           <!-- e.g.: all agents; coordinator only; one domain -->
+**Type:** {{RULE_TYPE}}                  <!-- e.g.: quality-gate blocking; guidance; convention -->
 
 ---
 
-## Princípio
+## Principle
 
-{{RULE_PRINCIPLE}} — o enunciado central da regra, numa ou duas frases claras.
+{{RULE_PRINCIPLE}} — the core statement of the rule, in one or two clear sentences.
 
-## Porquê
+## Why
 
-{{RULE_RATIONALE}} — a razão pela qual a regra existe. Se nasceu de um incidente, descrever o
-*padrão* do problema (não detalhes internos que revelem postura de segurança).
+{{RULE_RATIONALE}} — the reason the rule exists. If it was born from an incident, describe the
+*pattern* of the problem (not internal details that reveal security posture).
 
-## Procedimento
+## Procedure
 
 1. {{STEP_1}}
 2. {{STEP_2}}
 3. {{STEP_3}}
 
-## Verificação
+## Verification
 
-{{RULE_CHECK}} — como confirmar que a regra foi cumprida (ex.: um comando, um checklist item).
+{{RULE_CHECK}} — how to confirm the rule was followed (e.g.: a command, a checklist item).
 
-## Excepções
+## Exceptions
 
-{{RULE_EXCEPTIONS}} — casos em que a regra não se aplica.
+{{RULE_EXCEPTIONS}} — cases where the rule does not apply.
 
-## Referências cruzadas
+## Cross-references
 
 - {{CROSS_REF_1}}
 - {{CROSS_REF_2}}

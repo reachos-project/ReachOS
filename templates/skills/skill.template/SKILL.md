@@ -2,29 +2,29 @@
 name: {{SKILL_NAME}}
 description: "{{SKILL_DESCRIPTION}}"
 user-invocable: {{SKILL_USER_INVOCABLE}}      # true / false
-allowed-tools: [{{SKILL_ALLOWED_TOOLS}}]      # ex.: "Read", "Bash", "Grep"
+allowed-tools: [{{SKILL_ALLOWED_TOOLS}}]      # e.g.: "Read", "Bash", "Grep"
 disallowed-tools: [{{SKILL_DISALLOWED_TOOLS}}]
-model: {{SKILL_MODEL}}                         # ex.: um modelo leve para checklists
+model: {{SKILL_MODEL}}                         # e.g.: a lightweight model for checklists
 ---
 
 <!--
-  Template de skill (procedimento/checklist reutilizável).
-  Substitui todos os {{TOKEN}}. Mantém a skill focada numa só responsabilidade.
+  Skill template (reusable procedure/checklist).
+  Replace every {{TOKEN}}. Keep the skill focused on a single responsibility.
 -->
 
 # {{SKILL_TITLE}}
 
-## Quando executar
+## When to run
 
-- **Obrigatório** quando {{SKILL_MANDATORY_TRIGGER}}.
-- **Opcional** para {{SKILL_OPTIONAL_TRIGGER}}.
+- **Mandatory** when {{SKILL_MANDATORY_TRIGGER}}.
+- **Optional** for {{SKILL_OPTIONAL_TRIGGER}}.
 
 ## Input
 
-- **Argumento 1:** {{SKILL_INPUT_1}}.
-- **Argumento 2 (opcional):** {{SKILL_INPUT_2}}.
+- **Argument 1:** {{SKILL_INPUT_1}}.
+- **Argument 2 (optional):** {{SKILL_INPUT_2}}.
 
-## Procedimento
+## Procedure
 
 1. {{SKILL_STEP_1}}
 2. {{SKILL_STEP_2}}
@@ -32,21 +32,21 @@ model: {{SKILL_MODEL}}                         # ex.: um modelo leve para checkl
 
 ## Output
 
-Apresentar o resultado de forma estruturada:
+Present the result in a structured form:
 
 ```
-=== {{SKILL_TITLE}}: <alvo> ===
-Resultado: <resumo>
-Detalhe:
-  - <item>: PASS / FAIL / WARN — razão
-Recomendação: <acção>
+=== {{SKILL_TITLE}}: <target> ===
+Result: <summary>
+Detail:
+  - <item>: PASS / FAIL / WARN — reason
+Recommendation: <action>
 ```
 
-## Registo
+## Logging
 
-Após correr, registar o resultado no store transaccional para permitir métricas
-longitudinais (ver `examples/db/schema.example.sql`).
+After running, log the result to the transactional store to enable longitudinal
+metrics (see `examples/db/schema.example.sql`).
 
-## Notas
+## Notes
 
-{{SKILL_NOTES}} — armadilhas comuns, dependências, referências a regras relacionadas.
+{{SKILL_NOTES}} — common pitfalls, dependencies, references to related rules.
