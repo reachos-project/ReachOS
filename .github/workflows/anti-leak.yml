@@ -1,4 +1,4 @@
-# anti-leak.yml -- Public CI gate for the enterprise-open reference repo.
+# anti-leak.yml -- Public CI gate for the ReachOS reference repo.
 #
 # Design: internal security review (2026-07-03), Option 1+ (split linter).
 #
