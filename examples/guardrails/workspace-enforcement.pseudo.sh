@@ -5,6 +5,10 @@
 # are denied and logged. Detection specifics are intentionally left as tokens.
 #
 # Output convention: exit 0 = allow, exit != 0 = block (reason on stderr).
+#
+# LOAD-BEARING: the `exit 3` guard below is the ONLY thing that stops this file from running.
+# `bash -n` on it returns 0 -- {{TOKEN}} is valid shell, so the tokens do NOT break execution.
+# Remove the guard last, after every token is filled in, never while editing.
 
 # --- SKELETON GUARD: this file is illustrative and must not run as-is --------
 echo "SKELETON, not a runnable hook. Fill in {{...}} / <...> tokens first." >&2
@@ -17,7 +21,7 @@ AGENT_SLUG="{{AGENT_SLUG}}"            # e.g. market-analyst
 WRITE_TARGET="{{WRITE_TARGET_PATH}}"  # absolute path the agent wants to write
 
 # Each agent's allowed workspace root. Fictional example base:
-WORKSPACE_ROOT="/opt/atlas/assistant/workspaces/${AGENT_SLUG}"
+WORKSPACE_ROOT="/opt/halcyon/assistant/workspaces/${AGENT_SLUG}"
 
 # --- fail-safe: if we cannot parse the target, block ------------------------
 if [ -z "${WRITE_TARGET}" ]; then

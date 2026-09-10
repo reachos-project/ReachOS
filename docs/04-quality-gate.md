@@ -32,26 +32,40 @@ Each failing item blocks delivery:
 
 ## Score and decision
 
-```
-Structural score: X / 9
-Content score:    Y / 3
-Total score:      Z / 12
+The two axes decide differently, and conflating them is what makes a gate unusable:
 
-Recommendation:
-  SHIP        if Z ≥ 10/12  and  zero blockers
-  FIX FIRST   if there are blockers
-  REVIEW      if there are warnings but no blockers
+- **Structural (X / 9) is all-or-nothing.** Any failed item is a **blocker**. The number is for
+  the record; the decision is `blockers == 0` or not. "8 out of 9" does not ship.
+- **Content (Y / 3) is the number that decides.** These are warnings, and the count of them is
+  the difference between shipping and looking again.
+- **The total (Z = X + Y, out of 12) is reporting convenience only.** Never decide from it —
+  with zero blockers X is always 9, so Z is just `9 + Y` wearing a bigger denominator.
+
+```
+Decision — the FIRST branch that matches wins, and they do not overlap:
+
+  1. blockers > 0                            → FIX FIRST
+  2. quality-sensitive  and  Z < 11          → FIX FIRST, then human visual review
+  3. Z < 10                                  → REVIEW
+  4. otherwise                               → SHIP
 ```
 
-- Base rule: **minimum 10/12 and zero blockers**.
-- For *quality-sensitive* deliverables: **minimum 11/12** + human visual review.
+- Base rule: **zero blockers, and at least one content item passing** — which is what
+  "minimum 10/12" means once the arithmetic is written out.
+- For *quality-sensitive* deliverables (visual, third-party, publication): **minimum 11/12**,
+  i.e. at most one content warning, plus human visual review.
 - Maximum 2 correction rounds before escalating to the user.
+
+Record `structural_score`, `content_score` and `blockers` separately in the store — a single
+total cannot express "12/12 with one blocker", which is the case the gate exists to catch. See
+[`examples/db/schema.example.sql`](../examples/db/schema.example.sql) and an instantiated gate
+at [`examples/halcyon-consulting/skills/quality-gate/SKILL.md`](../examples/halcyon-consulting/skills/quality-gate/SKILL.md).
 
 ## Logging and metrics
 
 After running the checklist, log the result (structural score, content score, number of
-iterations, tags). This feeds a quality KPI. A useful signal: **divergence** between the
-structural score (12/12) and the user's subjective satisfaction (e.g., 6/10) indicates a
+iterations, tags). This feeds a quality KPI. A useful signal: **divergence** between a clean
+gate result (12/12 total, zero blockers) and the user's subjective satisfaction (e.g., 6/10) indicates a
 systemic failure that the checklist does not capture — a trigger to refine the gate itself.
 
 ## Language verification (example)

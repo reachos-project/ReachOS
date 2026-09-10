@@ -4,6 +4,10 @@
 # invalid Python on purpose (SyntaxError), so this file cannot be compiled or
 # executed against a real system until an implementer fills them in.
 #
+# LOAD-BEARING: unlike the two shell skeletons beside it, this one is protected by the
+# SyntaxError itself -- there is no `exit` guard to remove. The moment the last <<FILL: ...>>
+# token is replaced the file becomes importable and executable. Fill them in last.
+#
 # Illustrates layer C2 (pre-execution content inspection):
 #   * robust structured extraction of the command (NOT a fragile regex)
 #   * detection of destructive ops on critical paths (signature sets omitted)

@@ -13,7 +13,7 @@ from any real system.
 2. **Write from scratch (clean-room).** Describe the pattern from the *concept*. Never copy
    files, rules, or history from a real deployment — including your own.
 3. **Use placeholders and fictional examples.** Use `{{UPPERCASE_IN_BRACES}}` tokens for
-   parameterisable values; clearly invented entities (in the spirit of "Atlas Consulting")
+   parameterisable values; clearly invented entities (in the spirit of "Halcyon Consulting")
    for examples. See the existing `templates/` and `examples/` as a model.
 4. **Open a pull request** with a description of what problem the pattern solves and how it
    can be adapted.
@@ -41,7 +41,15 @@ unattributed overlaps with upstream projects.
 - `WARN` results (e.g., name overlap with an upstream) do not block, but require the overlap
   to be **conscious and attributed** (see `NOTICE`).
 
-Run the linter locally before opening the PR and confirm the exit code is `0`.
+Run the linter locally before opening the PR and confirm the exit code is `0`. This is the
+exact invocation CI uses (Python 3, standard library only, run from the repo root):
+
+```
+python3 tools/leak_linter.py --public --staging . --denylist tools/leak_linter_denylist.public.json --redact-matches
+```
+
+⚠️ Without `--public` the linter looks for the maintainers' private deny-list, which is not
+distributed — it will exit 3 with "denylist not found". That is expected; use the line above.
 
 ## Contribution licensing
 

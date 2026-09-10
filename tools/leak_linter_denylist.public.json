@@ -11,10 +11,14 @@
     "tuning_notes": "Regex Python (re). flags: 'i'=IGNORECASE. exempt_regex optional: if it matches the containing line, the hit is suppressed. Run with --public --redact-matches in CI."
   },
 
+  "_ignore_paths_note": "Relative prefixes excluded from CONTENT scanning only. Narrowed to the two files that necessarily match themselves (the linter and this deny-list) -- NOT the whole tools/ directory, so that anything else landing there is still content-scanned for secret patterns. The assert-absent tripwire (internal_artifacts) walks the tree separately and is NOT filtered by this key -- an ignored prefix can never hide a decoy. Verified by tools/test_leak_linter_tripwire.py.",
+  "ignore_paths": ["tools/leak_linter.py", "tools/leak_linter_denylist.public.json"],
+
   "internal_artifacts": {
     "_note": "Assert-absent tripwires. Files with these basenames must never appear in the public repo tree. Presence is a BLOCK (exit 2), not a scan-skip. Includes the private deny-list filenames so that accidentally committing them is caught by public CI.",
     "basenames": [
       "MANIFEST.md",
+      "leak_linter_denylist.json",
       "leak_linter_denylist.private.json",
       "leak_linter_denylist_internal.json"
     ]
@@ -35,6 +39,7 @@
 
   "upstream_names": {
     "_note": "WARN 'upstream-name-overlap'. Fires when a staging file basename or its content matches a name from the freskhu/genesis upstream tree. Universal OSS filenames are exempt (see ignore_universal). Non-blocking: demands conscious acknowledgment.",
+    "_provenance": "DERIVED, not curated: the full leaf-name set of the upstream tree (hooks, skills, protocols, scripts, agents, schema identifiers) at the snapshot named in NOTICE, minus ignore_universal. A name is here because it exists upstream, never because it is used by any particular deployment. Re-derive from the upstream tree when NOTICE's snapshot changes; do not add or remove names by hand.",
     "ignore_universal": ["readme", "license", "license-docs", "notice", "contributing", "changelog", "gitignore", "claude", "agents", "requirements", "manifest", "glossary"],
     "names": [
       "dream", "forum-pulse", "grill-me", "handoff", "inbox-process", "kaizen",

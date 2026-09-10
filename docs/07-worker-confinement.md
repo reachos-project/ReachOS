@@ -59,3 +59,8 @@ denial log to add only the genuinely necessary destinations.
 2. **Egress by allowlist** — deny by default, allow by observed exception.
 3. **Least privilege** — filesystem and network reduced to the strictly necessary.
 4. **Prove before trusting** — witnessed confinement test before production.
+
+## See also
+
+- `patterns/worker-confinement/` — the confinement profile, the witnessed test,
+  and what an egress allowlist costs to maintain.

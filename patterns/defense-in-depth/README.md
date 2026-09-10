@@ -6,7 +6,7 @@
 > regular expressions) is **deliberately omitted**: publishing detection signatures aids
 > evasion. Kerckhoffs' principle applied in the reverse of the obvious — the *mechanism* is
 > public, the *specific configuration* of each installation is private. All paths below are
-> fictional (`/opt/atlas/assistant/...`).
+> fictional (`/opt/halcyon/assistant/...`).
 
 ## Problem
 
@@ -97,8 +97,12 @@ Before applying a change to a critical file, run a dry-run that validates the ch
 - does each item to REMOVE actually exist? (otherwise the change is stale)
 - is each item to ADD absent? (otherwise it has already been applied)
 - do the structural assumptions the change makes still hold?
-- is the permission-rule syntax valid? (a rule with invalid syntax can be silently ignored by
-  the runtime — the defence goes inactive without warning)
+- is the permission-rule syntax valid? ⚠️ **This one is a belief, not a measurement, and it is
+  listed as a check precisely so it can be tested rather than assumed.** The fear is that a rule
+  with invalid syntax is silently ignored and the defence goes inactive without warning. On one
+  runtime we looked for evidence of that and **found none** — every apparent instance turned out
+  to be our own documentation echoed back into context (`docs/14-runtime-observed.md`,
+  §"What we could not establish"). Verify it on your host before relying on it, in either direction.
 
 If there is **drift** between the assumed and the real: **HALT** and re-evaluate before
 applying.
@@ -119,6 +123,13 @@ action traversing all layers is approximately the **product** `∏ p_i` — orde
 smaller than any single layer. Independence is what matters: if two layers share the same
 blind spot, they do not compose. Designing each layer to fail for a different reason is the
 heart of this pattern.
+
+⚠️ **The formula is doing qualitative work here, and it should be read that way.** No `p_i` is
+estimated anywhere in this repo, and deliberately so: each layer's residual is exactly the kind of
+record `docs/05-guardrails.md` says to keep in the house. So the product tells you the **shape** of
+the argument — that independent layers multiply and correlated ones do not — and it is not a
+quantitative claim about any deployment, including ours. Treat a stack of three layers with a
+shared blind spot as **one** layer, whatever the arithmetic suggests.
 
 ## Principles
 
