@@ -64,6 +64,40 @@ and an append-only activity history ensure that almost everything is reversible.
 | **Secret protection** | Block the exposure or reading of credential files. |
 | **Deny-by-default on critical paths** | Configuration/identity files are denied for writes by default, with an explicit, short maintenance window. |
 
+## Know the residual of each layer — and write it where the control lives
+
+The most dangerous document about a control is one that describes it as complete: whoever
+reads it stops looking.
+
+⭐ **Every layer has a residual. Establish yours, and record it in the file that implements
+the control** — not in a ticket, not in a review that gets archived. In the artefact, where
+the next reader arrives.
+
+⛔ **Then keep that record internal.** The residual of *your* deployment is an operational
+document, not a publishable one: it tells a reader what your controls do not reach, which is
+useful to exactly one audience. Publish the mechanism and the discipline; keep the gap
+analysis in the house.
+
+⚠️ Two questions worth answering for any layer you build, in writing, for yourself:
+*does this match the spelling of an action or its effect?* and *what happens when this control
+itself fails — does it block, or does it let the action through?* A control whose failure mode
+resembles success needs an independent liveness check (see `patterns/reciprocal-watchdog/`).
+
+## Controls decay, and they do it quietly
+
+⛔ **A control that asserts state starts lying the day the state changes**, and nothing about
+it looks broken — the sentence still reads well.
+
+Two habits keep this in check:
+
+1. **Prefer discovery to declaration.** A hand-maintained list of what is watched drifts from
+   what is actually watched; derive the list from the live configuration instead. A list that
+   is derived cannot disagree with its subject.
+2. **Ask the behaviour, not the inventory.** A hash proving a file has not changed does not
+   prove the control still bites. Periodically fire something the control *should* catch, and
+   confirm it does. A verifier is audited by its **silences**: if it never goes quiet in the
+   nominal state, it will be ignored; if it never speaks, nobody knows whether it works.
+
 ## Principles
 
 1. **Independent layers** — each fails differently; they do not share the same blind spot.
@@ -71,3 +105,8 @@ and an append-only activity history ensure that almost everything is reversible.
 3. **Log everything** — every denial and every authorised exception goes to an auditable log.
 4. **Never trust self-reported identity** of a caller for security decisions.
 5. **The concrete rule is not public** — the *pattern* is shareable; the detection signatures are not.
+
+## See also
+
+- `patterns/defense-in-depth/` — the layer topology in engineering detail,
+  and how to establish each layer's residual.

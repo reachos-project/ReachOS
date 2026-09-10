@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-leak_linter.py  --  Anti-leak linter for the enterprise-open clean-room repo.
+leak_linter.py  --  Anti-leak linter for the ReachOS clean-room repo.
 
 Hardened after internal security review. The --public mode and --redact-matches
 flag implement the split-linter safe-variant from that review.
@@ -10,10 +10,9 @@ WHAT IT DOES
 ------------
 Scans a staging tree (default: ../repo-staging) for:
 
-  BLOCK  -- real internal identifiers that MUST NEVER leave the private repo:
-            18 real personas + surnames, orchestrator/owner handles, real path
-            roots, infra hostnames/channels, incident refs (BSR-), real DB
-            schema identifiers, and secret/token/baseline-SHA patterns.
+  BLOCK  -- real identifiers of the private deployment that MUST NEVER leave
+            the private repo (enumerated only in the private deny-list), and
+            secret/token/baseline-SHA patterns.
             One or more BLOCK => process exit code != 0 (build-breaking).
 
   WARN   -- non-blocking signals that demand *conscious* acknowledgment:
@@ -109,7 +108,7 @@ SENSITIVE_CATEGORIES = {
     "real-path",
     "real-infra",
     "secret-channel",
-    "internal-incident-ref",
+    "incident-ref",
     "real-schema",
 }
 
@@ -180,6 +179,14 @@ def load_denylist(path):
     # inside staging. Presence => synthetic BLOCK. NOT a scan-skip.
     internal_artifacts = data.get("internal_artifacts", {}).get("basenames", [])
 
+    # Relative path prefixes excluded from CONTENT scanning only (see iter_text_files).
+    # Entries may be directory prefixes ("tools/") or exact file paths
+    # ("tools/leak_linter.py"). An entry with a file extension is exact.
+    ignore_paths = tuple(
+        p if (p.endswith("/") or os.path.splitext(p)[1]) else p + "/"
+        for p in data.get("ignore_paths", [])
+    )
+
     return {
         "block": compiled_block,
         "up_ignore": up_ignore,
@@ -187,6 +194,7 @@ def load_denylist(path):
         "mp_ack": mp_ack,
         "mp_terms": mp_terms,
         "internal_artifacts": internal_artifacts,
+        "ignore_paths": ignore_paths,
     }
 
 
@@ -213,14 +221,26 @@ def check_internal_artifacts(staging_root, basenames):
     return hits
 
 
-def iter_text_files(root):
+def iter_text_files(root, ignore_paths=()):
     for dirpath, dirnames, filenames in os.walk(root):
         dirnames.sort()
         if ".git" in dirnames:
             dirnames.remove(".git")
+        # ignore_paths excludes a prefix from CONTENT scanning ONLY. The assert-absent
+        # tripwire walks the tree separately (check_internal_artifacts) and is deliberately
+        # NOT filtered, so an ignored path can never become a blind spot for a decoy.
+        rel_dir = os.path.relpath(dirpath, root).replace(os.sep, "/") + "/"
+        if rel_dir == "./":
+            rel_dir = ""
+        dir_prefixes = tuple(p for p in ignore_paths if p.endswith("/"))
+        exact_files = set(p for p in ignore_paths if not p.endswith("/"))
+        if dir_prefixes and rel_dir.startswith(dir_prefixes):
+            continue
         for fn in sorted(filenames):
             ext = os.path.splitext(fn)[1].lower()
             if ext in TEXT_EXTS:
+                if (rel_dir + fn) in exact_files:
+                    continue  # exact-file exclusion, content scan only
                 yield os.path.join(dirpath, fn)
 
 
@@ -346,7 +366,7 @@ def main(argv=None):
     default_staging = os.path.normpath(os.path.join(here, "..", "repo-staging"))
     default_denylist = os.path.join(here, "leak_linter_denylist.json")
 
-    ap = argparse.ArgumentParser(description="Anti-leak linter for enterprise-open.")
+    ap = argparse.ArgumentParser(description="Anti-leak linter for ReachOS.")
     ap.add_argument("--staging", default=default_staging,
                     help="staging tree to scan (default: ../repo-staging)")
     ap.add_argument("--denylist", default=default_denylist,
@@ -429,7 +449,7 @@ def main(argv=None):
     total_warn = 0
     files_scanned = 0
 
-    for path in iter_text_files(args.staging):
+    for path in iter_text_files(args.staging, dl["ignore_paths"]):
         text = read_text(path)
         if text is None:
             continue
@@ -493,7 +513,7 @@ def main(argv=None):
         print(json.dumps(out, ensure_ascii=False, indent=2))
     else:
         print("=" * 72)
-        print("ANTI-LEAK LINTER  --  enterprise-open")
+        print("ANTI-LEAK LINTER  --  ReachOS")
         if args.public:
             print("MODE    : --public (allowlist-inversion; fail-closed)")
         if args.maintainer:

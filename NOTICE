@@ -1,4 +1,4 @@
-CEO-Virtual Orchestration — Reference Architecture
+ReachOS — Reference Architecture for Coordinated Hives
 Copyright (c) 2026 The reference-architecture authors.
 
 This product is licensed under the Apache License, Version 2.0 (code and
@@ -52,6 +52,34 @@ original engine for our memory layer before an internal successor was built.
 Apache License 2.0. This attribution is offered as credit for the concepts and
 taxonomy we build upon; where any MIT-licensed source is adapted, its copyright
 notice is preserved alongside.
+
+================================================================================
+Third-party product observed — not a lineage, not a dependency
+================================================================================
+
+`docs/14-runtime-observed.md` reports observations of the behaviour of Claude Code,
+a command-line agent runtime published by Anthropic PBC, which the authors license
+and operate. The architecture in this repository was developed and exercised on it.
+
+This is not a lineage relationship and is recorded separately for that reason. No
+code, text, or other protected expression of Anthropic PBC is incorporated into or
+distributed with this repository, and no attribution obligation arises under any
+Anthropic licence. The relationship is one of factual observation by a licensee
+during ordinary use, offered as a field report.
+
+Those observations were obtained solely by reading the session transcripts the
+product writes to the operator's own disk. No decompilation, disassembly,
+inspection of packaged code, network interception, or circumvention of technical
+measures was used, and material whose origin was the product's packaged code
+rather than its observed behaviour was deliberately excluded from publication.
+
+Claude, Claude Code, and Anthropic are trademarks of Anthropic PBC. They are used
+in this repository solely to identify the product observed. This project is not
+affiliated with, authorised by, endorsed by, or sponsored by Anthropic PBC, and no
+Anthropic name or logo is used as part of this project's name, logo, or identity.
+
+All other trademarks referenced anywhere in this repository are the property of
+their respective owners.
 
 ================================================================================
 

@@ -6,6 +6,11 @@
 # classifier is left as <is_read_only()> -- each install provides its own.
 #
 # Output convention: exit 0 = allow, exit != 0 = block (reason on stderr).
+#
+# LOAD-BEARING: the `exit 3` guard below. Today this file also fails `bash -n`, because the
+# <is_read_only ...> angle token is invalid shell -- but that is an accident of token style,
+# not a control: {{TOKEN}} placeholders parse fine. The guard is what you may rely on.
+# Remove it last, after every token is filled in, never while editing.
 
 # --- SKELETON GUARD: this file is illustrative and must not run as-is --------
 echo "SKELETON, not a runnable hook. Fill in {{...}} / <...> tokens first." >&2

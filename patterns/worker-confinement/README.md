@@ -2,7 +2,7 @@
 
 > **Scope.** Engineering of an isolated autonomous worker. Real host allowlists, keys, and
 > installation runbooks are outside the repo. Fictional paths and hosts (`worker.example`,
-> `api.atlas-consulting.example`).
+> `api.halcyon-consulting.example`).
 
 ## Objective
 

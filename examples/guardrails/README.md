@@ -6,9 +6,20 @@
 >
 > - The sets of destructive verbs, the critical-path globs and the detection expressions are
 >   represented by **tokens** (`{{...}}`, `<...>`) that **each installation fills in**.
-> - The `.pseudo.*` files are **not executable as they stand** — the tokens deliberately break
->   any attempt at direct execution. This is intentional: a security example should not be
->   runnable blindly against a real system.
+> - The `.pseudo.*` files must **not run as they stand**. ⚠️ **The tokens are not what stops
+>   them, and it is worth knowing which is which** — measured, not assumed:
+>
+>   | File | Parses? | What actually prevents execution |
+>   |---|---|---|
+>   | `content-inspection.pseudo.py` | no — `SyntaxError` | the `<<FILL: ...>>` tokens are invalid Python |
+>   | `sql-readonly.pseudo.sh` | no — `bash -n` fails | the `<is_read_only ...>` angle token is invalid shell |
+>   | `workspace-enforcement.pseudo.sh` | **yes — `bash -n` returns 0** | **only the `exit 3` guard** |
+>
+>   `{{TOKEN}}` is perfectly valid shell; `<angle>` tokens are not. So whether a skeleton
+>   happens to be un-parseable depends on which token style its lines use — which is an
+>   accident, not a control. ⛔ **The `exit 3` guard on the first executable line is the real
+>   protection and is therefore load-bearing.** Remove it last, deliberately, and only once
+>   every token is gone.
 >
 > See `patterns/defense-in-depth/` for why the concrete signatures stay private (evasion)
 > while the pattern stays public (Kerckhoffs).

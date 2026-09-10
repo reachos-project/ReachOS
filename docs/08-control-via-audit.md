@@ -50,6 +50,27 @@ Write  ──►  Log in the audit queue (actual content, not just a summary)
 Cross-reference two sources: events logged in the history **versus** items in the queue. A
 write event with no corresponding queue item signals a failed log — the audit audits itself.
 
+⛔ **But note what the history actually records.** The authorisation hook decides and logs
+**before** the write is attempted. If the write then fails — a permission, an immutable flag,
+a sandbox denial — the event still reads as allowed. Measured here: entries recorded as
+authorised writes for which no file exists.
+
+⛔ **And the harder question this model does not answer on its own: who audits the auditor?**
+Everything here — the close, the sweep, the queue, the quality gate — is executed by the same
+assistant whose writes it is checking. That is a self-control, and this repo is otherwise strict
+about not accepting those: `patterns/tripwire-baseline/` insists the pin be written by the
+installing identity and not the running one, and `patterns/adversarial-review/` requires the
+arbiter to measure in another domain. **Neither principle is applied to the self-controls above,
+and the gap is real.** What makes it tolerable is not the audit — it is that every write is
+**reversible** and the record is **outside the assistant's own reasoning**, so a person can
+reconstruct what happened without trusting the account of it. If you need more than that for a
+given class of write, the answer is a second identity, not a stricter checklist.
+
+⭐ **The audit reads authorisations, not writes.** To know whether something was actually
+written, look at the artefact. An audit trail answers *what was permitted*; only the
+filesystem answers *what happened*. Any regime built on "free writes plus ex-post review"
+depends on that distinction being understood, or the review inspects a record of intentions.
+
 ## Caution with sensitive data
 
 If the audit queue duplicates content in plaintext, then **no sensitive content** (special
