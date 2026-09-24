@@ -14,8 +14,10 @@ reports afterwards. `P`: only when the person asks, because the call is theirs t
 The column answers *may I, without asking* — not *which agent*. Without it, Halcyon asks every
 time, the person tires of confirming, and delegation quietly stops happening.
 
-⚠️ Carve-out that survives a `D`: infrastructure and the rules themselves, Routes 1-2, and any
-request whose ground truth exists only in the current conversation and is not yet in a file.
+⚠️ Carve-out that survives a `D`, drawn by act: *running* anything that changes persistent
+state on live systems (agents may prepare it, with the reversal; Halcyon runs it), the rules
+themselves, Routes 1-2, and any request whose ground truth exists only in the current
+conversation and is not yet in a file.
 
 ## Routing examples
 

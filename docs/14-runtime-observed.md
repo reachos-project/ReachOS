@@ -40,6 +40,7 @@
 > or withdrawn. Accuracy is the whole purpose of this chapter, and it is asserted for no other.
 >
 > **Published: 2026-09-10.** Every "as of publication" in this chapter means that date.
+> **Corrected: 2026-09-24** — finding 1 was wrong as published; see §"Corrections".
 >
 > *Claude, Claude Code, and Anthropic are trademarks of Anthropic PBC, used here solely to
 > identify the product observed. No affiliation, authorisation, endorsement, partnership, or
@@ -53,7 +54,7 @@ If you read nothing else:
 
 | # | The assumption | What is actually true |
 |---|---|---|
-| 1 | HTML comments in an always-loaded instruction file are free | They are **not stripped**. They enter context verbatim, every session, and you pay for them |
+| 1 | An HTML comment in an always-loaded instruction file is either always stripped or never | **It depends on where it sits.** A comment on its own line, or a multi-line comment block, did not reach context. A comment that **shares its line with text** — at the end, in a heading, or mid-line — did, every session, paid for *(corrected 2026-09-24; see §"Corrections")* |
 | 2 | A long conversation is what costs you | Almost the entire input is cache reads. **Prefix churn** is the cost driver — editing one character near the top of the prompt is far more expensive than a thousand turns at the bottom |
 | 3 | A probe that comes back "blocked" tested your guard | It may have tested nothing. **An absent tool fails before any permission layer runs**, and the message looks like a refusal |
 | 4 | Compaction summarises; history is still roughly there | Compaction **rewrites** history. The ancestry chain is deliberately cut, and ~97% of context is discarded |
@@ -104,19 +105,54 @@ and the model can be instructed to act on it.
 
 ## Files that load every session
 
-### Comments are not free
+### Comments: free or not depends on where they sit
 
-**HTML comments in instruction files are not stripped.** Tested directly: comment bodies taken
-from the source of each injected instruction file were then searched for in the payload actually
-rendered into context. **Every one was present.**
+⚠️ **This section was wrong as first published, and has been rewritten** — see §"Corrections"
+for what it said and why it changed.
 
-⛔ **This is the finding to lead with**, because the assumption runs the other way. `<!-- ... -->`
-looks like a place to park rationale, history, decisions and notes-to-self in a file that loads
-every session. It is not. You pay for it on **every session**, and the model reads it.
+**Whether an HTML comment reaches context depends on its placement: a comment on its own lines
+does not; a comment that shares its line with text does.** Three sources, stated separately
+because they are not equally strong:
 
-⭐ Combine this with the cost finding below and it becomes the strongest argument in this
-document for keeping always-loaded files short: archaeology in a comment block is not free
-storage, it is rent.
+- **Controlled probe, before publication** (*probe 1*): a throwaway project whose instruction
+  files hid a unique token inside each comment, next to a **visible control token in the same
+  file** — so a missing comment could not be confused with a file that never loaded. It covered
+  own-line comments in both files and a block in the rules file. Every visible token came back;
+  no comment token did.
+- **Controlled probe, isolated project, 2026-09-24** (*probe 2*): the same design, extended to
+  every placement in the table, in both files, run in a fresh session with no tools. Both
+  visible control tokens came back, and no token outside the answer key was returned — so the
+  files loaded and the answer was not invented.
+- **Observation of a live session** (*observation*): in a working deployment, a short comment at
+  the end of a heading line in a loaded rules file was present in the model's context, while
+  own-line comments and comment blocks in files loaded in the same session were absent and the
+  text around them was present. Not designed as a test — but it is what exposed the error.
+
+| Placement | Always-loaded project instruction file | Always-loaded rules file | Always-loaded memory index |
+|---|---|---|---|
+| Comment on its own line | **did not reach context** (probes 1 and 2, observation) | **did not reach context** (probes 1 and 2) | not tested |
+| Multi-line comment block | **did not reach context** (probe 2) | **did not reach context** (probes 1 and 2, observation) | **did not reach context** (observation) |
+| Comment at the end of a line of text | **reached context** (probe 2) | **reached context** (probe 2) | not tested |
+| Comment at the end of a heading | **reached context** (probe 2) | **reached context** (probe 2, observation) | not tested |
+| Comment in the middle of a line, text on both sides | **reached context** (probe 2) | **reached context** (probe 2) | not tested |
+
+⚠️ **This is about files the runtime loads by itself at session start.** A file the model opens
+with a read tool is returned as it is on disk, comments included — a different path, and
+nothing in this table applies to it.
+
+⛔ **The trap is the last three rows.** Parking rationale, history and notes-to-self in a
+comment on its own lines is, as observed, free: it is removed before the file reaches the
+model. A comment that shares its line with text is not — at the end of a sentence, at the end
+of a heading, or in the middle of a line, it arrives with the line, every session, and you pay
+for it. Two comments that look the same in an editor behave differently depending on whether
+text shares their line.
+
+⭐ So the practical rule is placement, not abstinence: **a comment on its own line, or in a
+block, does not reach the model; a comment that shares its line with text does.** Archaeology
+goes in a block on its own lines; nothing you do not want the model to read goes on a line
+with text. The memory-index cells marked "not tested" are exactly that, and all of this is one
+host, one configuration — **re-measure on your own host** before relying on it
+(§"Checking these yourself").
 
 ### The always-loaded index has a hard cap, and the runtime warns you before it
 
@@ -372,9 +408,16 @@ To reproduce the method:
    our findings outright — see below.
 4. **Run a positive control on every negative result.** If you claim a record does not exist,
    prove in the same pass that your search finds the records that *do*.
-5. **Distinguish runtime-emitted strings from your own text echoed back.** Instruction files come
-   back into context verbatim, so a grep across transcripts will find *your own documentation*
-   and it will look like evidence. This is the single easiest way to fool yourself here.
+5. **Distinguish runtime-emitted strings from your own text echoed back.** The text of your
+   instruction files comes back into context, so a grep across transcripts will find *your own
+   documentation* and it will look like evidence. This is the single easiest way to fool
+   yourself here.
+6. **To test what an instruction file delivers, hide a unique token and plant a control.** Put
+   a random token inside the construct you are testing (a comment, a block, a trailing tag) and
+   a visible random token in the same file; ask a fresh session, with no tools, to list every
+   token of that shape it was given. The visible token must come back, or the file never loaded
+   and the run says nothing. A token that comes back and is not in your key means the answer is
+   invented, and the run says nothing either.
 
 ---
 
@@ -406,6 +449,39 @@ hits were overwhelmingly the operator's **own prose**, echoed back into context 
 mechanism described in §"Files that load every session". The corrected finding above is sharper
 than the one it replaced. **If it happened here, on a page written to guard against exactly
 this, assume it can happen to you.**
+
+---
+
+## Corrections
+
+**2026-09-24 — finding 1 (HTML comments) was wrong as published.**
+
+- **What the page said:** HTML comments in instruction files are not stripped; every comment
+  body tested was present in context; this was "the finding to lead with".
+- **What is observed now:** comments on their own line, and multi-line comment blocks, did
+  **not** reach context; a comment that shares its line with text — at the end of a line, at
+  the end of a heading, or mid-line — **did**. The table in §"Comments: free or not depends on
+  where they sit" gives each cell and the method behind it, including the cells that were not
+  tested.
+- **Measured the same day:** the placements this correction first left untested in the
+  instruction file and the rules file — a comment at the end of a line, at the end of a
+  heading, and mid-line, plus a block in the instruction file — were measured on 2026-09-24 by
+  a controlled probe in an isolated project, with a visible control token in each file and an
+  answer key to catch invented tokens. Both controls held. Only memory-index cells remain
+  untested.
+- **How it was found:** a short trailing comment on a heading was seen in a live session's
+  context, which is what the original claim predicted — but the own-line and block comments
+  loaded in the same session were absent, which it did not. A controlled probe, run before this
+  page was first published, had already shown own-line and block comments being removed. **It
+  was not reconciled with this page before publication** — that part is our process failure.
+  Whether the product also changed in between, we cannot exclude: there are measurements from
+  before publication and from after, and none from the day.
+- **Why the original test came out the other way:** not established. We have not re-run it, and
+  we do not guess at it here. §"Checking these yourself", item 5, names the most likely way to
+  fool yourself with this kind of search; we cannot say it is what happened.
+- **What did not change:** the cost argument in §"What you actually pay for" — an edit near the
+  top of the prompt is paid for as a whole prefix — stands. It now applies to comments that
+  reach context, not to all of them.
 
 ---
 

@@ -36,8 +36,9 @@ has a size limit in the host, and past it content is silently dropped. Find the 
 against it at every close, and keep the file well below — see `templates/MEMORY-INDEX.template.md`.
 On one host that limit is roughly 25 KB and the runtime warns you before you reach it, naming a
 target of about 70% of the cap; `docs/14-runtime-observed.md` has the measurement, along with the
-reason the cost is worse than it looks — comments in such a file are **not** stripped, and every
-edit near the top of the prompt is paid at write prices.
+reason the cost is worse than it looks — every edit near the top of the prompt is paid at write
+prices, and a comment trailing a line of text is loaded with the line (a comment on its own
+lines, as observed, is not).
 
 ## Order of instantiation
 

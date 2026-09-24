@@ -1,8 +1,8 @@
 <!-- DELETE THIS COMMENT BLOCK WHEN YOU INSTANTIATE.
-     HTML comments are NOT stripped before a file reaches the model: they are loaded, and paid
-     for, on every single session (`docs/14-runtime-observed.md`). In this template the comment
-     is most of the file. Keep it while you fill the template in; remove it before the file
-     starts loading.
+     On the host observed in `docs/14-runtime-observed.md`, a comment block on its own lines did
+     not reach the model, but a comment trailing a line of text did — and your host may differ.
+     Do not rely on either: in this template the comment is most of the file. Keep it while you
+     fill the template in; remove it before the file starts loading.
 
   MEMORY INDEX — the hot tier. This file loads AUTOMATICALLY in every session (runtime
   capability 1, docs/13-runtime-requirements.md). Companion: {{PROJECT_ROOT}}/ACTIVE.md, built

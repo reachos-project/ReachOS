@@ -12,6 +12,7 @@ one that maps the ambiguity.
 | **Delegation** | Transfer of a task from the coordinator to an agent, logged for traceability. |
 | **Delegation mode (`D` / `P`)** | Per-domain declaration of whether the coordinator may delegate without asking (`D`, permission already given) or only on explicit request (`P`). Answers *may I, without asking* — not *which agent*. |
 | **Ground-truth carve-out** | The rule that a request is not delegated while its evidence exists only in the current conversation. A delegate cannot verify what it cannot open. |
+| **Exclusion by act** | What stays with the coordinator even when delegation is pre-authorised is decided by the act, not the domain: *running* anything that changes persistent state or restarts a service on live infrastructure. Reading, designing and writing the exact command, with its reversal, are delegated. |
 | **Hot / warm / cold memory** | Three persistence tiers: always-loaded / on-demand / semantic archive. |
 | **Source of truth (SoT)** | The authoritative artefact, and it differs by kind: markdown files for knowledge and reasoning, the transactional store for state (clocks, routines, tasks, deliverables — `docs/09-clocks-and-routines.md`). Indexes are derived from either, and are authoritative for nothing. |
 | **Vector index** | A semantic retrieval layer built on top of the SoT; never replaces it. |

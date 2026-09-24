@@ -45,15 +45,49 @@ Make it explicit, per row:
 - **`P` — on explicit request only.** Sensitive, personal, or politically loaded domains
   where the user decides case by case whether a specialist is involved at all.
 
-**Carve-out — what stays with the coordinator even in a `D` row:**
+**Carve-out — what stays with the coordinator even in a `D` row. It is drawn by ACT, not by
+domain:**
 
-1. system and infrastructure work, and the governance rules themselves;
-2. Routes 1 and 2 (by definition, no agent);
-3. any request whose ground truth exists **only in the current conversation** and has not
+1. **running** the act that changes persistent state or restarts a service on live
+   infrastructure — networks, shared hosts, anything in production;
+2. the protected configuration and the governance rules themselves;
+3. Routes 1 and 2 (by definition, no agent);
+4. any request whose ground truth exists **only in the current conversation** and has not
    been written to a file the delegate can read.
 
-Point 3 is the one that bites. An agent cannot verify what it cannot open. Either the
-context is materialised into an artefact first, or the work is not delegated — a delegate
+✅ **On the very same systems, reading, analysing, designing and writing the exact command are
+delegated** — including read access to those systems. The agent hands back the act, with its reversal
+next to it; **the coordinator is the one who runs it.**
+
+⭐ **Why the line is the act and not the place — three reasons, none of them competence:**
+
+1. **The reversal may not exist through the same channel.** Some systems can be restored
+   through the same interface you changed them with. A network or firewall change can **cut the
+   channel you would repair it through**, and recovery becomes physical. A host that other
+   services depend on turns a small mistake into an outage of everything else.
+2. **Containment is the number of hands, not the list of commands.** Access to a critical
+   device is best held through a dedicated credential that can be revoked without touching
+   anyone else's — a property that holds only while that credential stays out of every other
+   agent's envelope.
+3. **With an agent acting, verification arrives after the fact.** Rule 1 forbids delegating
+   verification to whoever delivered, and the coordinator answers to the user. Measured in one
+   deployment, on one day: of three deliveries verified before running, **two had defects** —
+   and neither did harm, because the act had not happened yet.
+
+⚠️ **The line is "changes persistent state or restarts a service", not a list of verbs.** Some
+commands look like reads and mutate — committing a setting staged earlier, a reload that
+re-reads a broken configuration. A verb list is exactly the kind of lexical predicate that
+cannot tell a remedy from an attack.
+
+⛔ **An earlier version of this carve-out reserved "system and infrastructure work" as a
+domain, and it contradicted Rule 1** — which says infrastructure (scripts, verifiers, jobs) is
+delegated. Two live rules asserted opposite things about the same word for over two weeks
+before anyone noticed. Resolved in favour of the newer: **building an artefact is delegated;
+running the act is not.** A `D` row stops being `D` because of the act, never because the
+request is small.
+
+Point 4 is the one that bites most often. An agent cannot verify what it cannot open. Either
+the context is materialised into an artefact first, or the work is not delegated — a delegate
 reasoning from a summary produces confident output nobody can check.
 
 > **Why this is worth a column rather than a paragraph.** Measured in one deployment: **half

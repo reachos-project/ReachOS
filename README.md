@@ -65,7 +65,7 @@ Ten pattern families sit on top of this skeleton:
   coordinator; none acts on its own initiative.
 - **Routes** (`docs/02-smart-routing.md`): Direct · Micro-edit · Single-agent · Pipeline · Parallel.
 - **Runtime** (`docs/13-runtime-requirements.md`): six host capabilities; interception and confinement are different layers.
-- **Runtime, observed** (`docs/14-runtime-observed.md`): field notes on how one host actually behaves — comments in loaded files are not free, an absent tool looks like a blocked one, and history is not reliably append-only.
+- **Runtime, observed** (`docs/14-runtime-observed.md`): field notes on how one host actually behaves — whether a comment in a loaded file costs you depends on where it sits, an absent tool looks like a blocked one, and history is not reliably append-only.
 - **Memory** (`docs/03-memory-3tier.md`): hot (every session) · warm (on-demand) · cold (semantic archive).
 - **Memory index** (`templates/MEMORY-INDEX.template.md`): pointers only, one line each, with a ceiling — the shelf's stable twin.
 - **Guardrails** (`docs/05-guardrails.md`): 3 layers — matcher → content inspection → backups.
