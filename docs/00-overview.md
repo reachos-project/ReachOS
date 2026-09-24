@@ -53,6 +53,11 @@ Each agent:
 | Scheduled daemons | `patterns/scheduled-daemons/` | Installing, approving and retiring background jobs — and finding the payload that actually runs. |
 | Runtime substrate | `13-runtime-requirements.md` | The six host capabilities everything above assumes, and the order to instantiate them in. |
 | Runtime behaviour | `14-runtime-observed.md` | Field notes: how one such host actually behaves, measured from its own transcripts. Dated, version-bound, and not a vendor statement. |
+| Verification | `15-verification.md` | Probes that can fail; reading a verifier's output, not its return code; auditing it by its silences. |
+| Decision discipline | `patterns/decision-questions/` | Six questions carried into every recommendation mandate; question 0 is executed and is the gate. |
+| Cross-lineage review | `patterns/cross-lineage-red-team/` | A bounded dialogue with a model of another lineage when the coordinator is an interested party. |
+| Learning from outside | `patterns/external-practice-radar/` | A funnel from a daily scout to a weekly human adoption decision, with integrity carried downstream. |
+| Documentation that stays true | `patterns/domain-manuals/` | One manual per domain holds the paths; everything else refers to it by section name. |
 
 **Before any of it, in this order:** `13-runtime-requirements.md` — whether your host can
 carry this at all — then `templates/onboarding-interview.md`, the first-run interview that
@@ -73,7 +78,7 @@ architecture and an assistant; skipping the first is building on an assumption.
 ## How to read this repo
 
 After those two, start with `01` and `02` (the orchestration core), then `03` (memory) and
-`04` (quality).
+`04` (quality), and `15` (verification) — the verb the other chapters use without defining.
 Documents `05`–`07` describe the security posture **conceptually** — runnable implementations
 are deliberately excluded from this repo. Instantiate the `templates/` with the help of the
 example in `examples/halcyon-consulting/`.

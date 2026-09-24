@@ -43,9 +43,9 @@ User → Coordinator → Specialist agent → Coordinator → User
 2. [`templates/onboarding-interview.md`](templates/onboarding-interview.md) — the first-run
    interview. Without it the system has a routing map and no idea who it works for.
 
-Ten pattern families sit on top of this skeleton:
+The pattern families that sit on top of this skeleton:
 
-1. **Orchestration** — governance rules for the coordinator (delegation, chain of command, traceability).
+1. **Orchestration** — governance rules for the coordinator (delegation, chain of command, traceability), and the decision questions every recommendation must answer — including the block carried into the mandate of whoever writes it.
 2. **Smart routing** — classifying each request into one of 5 routes, and declaring per domain whether delegation needs to be asked for at all.
 3. **3-tier memory** — hot / warm / cold, with markdown as the source of truth and a derived vector index.
 4. **Quality gate** — a blocking checklist before any delivery.
@@ -53,8 +53,11 @@ Ten pattern families sit on top of this skeleton:
 6. **Provenance and dating** — how a note records what it knows, how it knows it, and since when; and how to recover dates that were never written down.
 7. **Retiring instruments** — what to do with a script, hook, or routine that is no longer in force, so that it stops being read as if it were.
 8. **Time** — clocks (fire once, then die) versus routines (recur), why their state belongs in a store rather than in prose, and why "reminded" is not "done".
-9. **Session lifecycle and review culture** — how a session opens and closes, what gets logged about the working relationship, and how to keep an advisor from becoming a mirror.
+9. **Session lifecycle and review culture** — how a session opens and closes, what gets logged about the working relationship, how to keep an advisor from becoming a mirror, and how to have a judgement attacked by a model of another lineage when the whole team is an interested party.
 10. **Host substrate** — persistent sessions that survive disconnection, the OS sandbox beneath the rule layer, and scheduled background jobs: the machine-level realities that decide whether any of the above holds.
+11. **Verification** — probes that can fail: reach and negative controls, reading a verifier's output rather than its return code, auditing a verifier by its silences, and what to do when two correct controls contradict each other.
+12. **External practice radar** — a funnel from a cheap daily scout to a weekly human adoption decision, with the harvest's integrity carried downstream and silence as the nominal state.
+13. **Domain manuals** — one manual per domain as the only place with a duty to be right; everything else refers to it by manual and section name, never by path or number.
 
 ---
 
@@ -81,6 +84,11 @@ Ten pattern families sit on top of this skeleton:
   the state, the reason, and the one next action.
 - **Sandbox** (`docs/12-os-sandbox.md`): deny wins and is inherited; removing an allow does not deny; two probes per change, one denied and one allowed.
 - **Daemons** (`patterns/scheduled-daemons/`): the payload that runs is not the file you are reading.
+- **Decision questions** (`patterns/decision-questions/`): six questions before any recommendation; question 0 is executed and cited, even when empty, and it is the gate.
+- **Verification** (`docs/15-verification.md`): a probe that cannot fail does not measure — it describes.
+- **Radar** (`patterns/external-practice-radar/`): scout → triage → mechanical digest → human council → ledger; a floor harvest says so, all the way down.
+- **Manuals** (`patterns/domain-manuals/`): refer by manual and section name; only the manual holds paths — not prose, not code, not data.
+- **Cross-lineage red team** (`patterns/cross-lineage-red-team/`): at most four rounds, blind first, replies are data, and "inconclusive by budget" is not "passed".
 
 ---
 
@@ -91,7 +99,7 @@ Ten pattern families sit on top of this skeleton:
 | `docs/` | The "why" and "how" of each pattern, in prose. |
 | `templates/` | Parameterisable skeletons with `{{TOKEN}}` placeholders. |
 | `examples/` | A complete fictional instance ("Halcyon Consulting"), an example schema, and guardrail skeletons. |
-| `patterns/` | Deep engineering of each pattern: defence-in-depth, heartbeat, confined worker, tripwire/baseline, apply preflight, reciprocal watchdog, confined agent messaging, provenance and dating, retiring instruments, adversarial review, handoff to human, remote autonomous sessions, scheduled daemons. |
+| `patterns/` | Deep engineering of each pattern: defence-in-depth, heartbeat, confined worker, tripwire/baseline, apply preflight, reciprocal watchdog, confined agent messaging, provenance and dating, retiring instruments, adversarial review, handoff to human, remote autonomous sessions, scheduled daemons, decision questions, external practice radar, domain manuals, cross-lineage red team. |
 | `NOTICE` | Upstream lineage attribution (see Acknowledgments below). |
 
 ## How to use the templates
