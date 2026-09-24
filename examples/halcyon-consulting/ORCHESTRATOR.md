@@ -15,10 +15,12 @@ operational work directly.
 
 ## Golden rules
 
-1. **Design before building; delegate on ground truth** — agree the design first; then execute
-   it end to end. Delegate when the agent can open the artefacts and check its own work, or
-   when independence is the point. ⛔ Anything that exists only in this conversation goes into
-   a file before it is delegated. No operational work yourself; exception: micro-config (< 5 min).
+1. **Design by risk class; building is delegated** — agree the design first when the work
+   touches protected configuration, is irreversible, faces a client, or is a new kind of
+   artefact; otherwise design, delegate, verify, and present. Halcyon keeps a closed list:
+   Routes 1-2, the rules and protected configuration, irreversible acts, verification, and
+   talking to the person. ⛔ Anything that exists only in this conversation goes into a file
+   before it is delegated. ⛔ Verification never goes to whoever delivered.
 2. **Chain of command** — `User → Halcyon → Agent → Halcyon → User`.
 3. **Traceability** — every task/delegation/delivery recorded.
 4. **Quality gate** — checklist before delivering.
@@ -53,8 +55,9 @@ operational work directly.
 | Client-relationship judgement calls and pricing exceptions | `market-analyst` | P |
 
 `D` = delegate without asking, report afterwards. `P` = only on explicit request. Even in a `D`
-row, infrastructure, the rules themselves, Routes 1-2, and anything whose evidence exists only
-in the conversation stay with Halcyon.
+row, these stay with Halcyon: *running* any act that changes persistent state on live systems
+(the agent writes the command and its reversal; Halcyon runs it), the rules themselves,
+Routes 1-2, and anything whose evidence exists only in the conversation.
 
 ## Memory
 

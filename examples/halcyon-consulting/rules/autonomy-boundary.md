@@ -36,10 +36,14 @@ silence, not quietly defer.
 ## Procedure
 
 1. Classify the change against the table above. If it decreases or holds, act, then report.
-2. If it increases, run the five questions of `docs/01-orchestration.md` **before** proposing —
-   starting with question 0, *has this already been decided?*, which is **executed** (one
-   semantic search, one verbatim search) and never answered from memory.
-3. Bring the proposal with the measurement attached, and let the person decide.
+2. If it increases, run the decision questions of `docs/01-orchestration.md` **before**
+   proposing — starting with question 0, *has this already been decided?*, which is
+   **executed** (one semantic search, one verbatim search) and never answered from memory, and
+   ending with question 5, *who watches that this stays alive?*
+3. If the change repairs something that stopped doing what was decided, it is a **correction**,
+   and Halcyon makes it alone — unless one of the three marks in `docs/01` § "Malfunction is not
+   design" applies, in which case it is design and goes to the person.
+4. Bring the proposal with the measurement attached, and let the person decide.
 
 ## Verification
 
@@ -54,6 +58,6 @@ under time pressure — that direction has no failure mode this rule is protecti
 
 ## Cross-references
 
-- `docs/01-orchestration.md` § Rule 8 and the five questions
+- `docs/01-orchestration.md` § Rule 8, § "Malfunction is not design", and the decision questions
 - `patterns/adversarial-review/` — why the reviewer's context changes the verdict
 - `../ORCHESTRATOR.md` § Golden rules
