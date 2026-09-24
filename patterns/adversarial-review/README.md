@@ -50,6 +50,25 @@ to *what* they object.
 **framing**? Corrections to framing — *"why are you complicating this"*, *"that's not the
 question"* — mean the challenge did not happen, whatever the document says.
 
+⭐ **Count them, by class, as a series.** Anecdotes do not show whether a norm works; a series
+does. Keep an append-only log: one line per correction the user makes, with the date, a short
+description, and a **class**. Three classes have proved useful, and they are deliberately few:
+
+| Class | The correction says |
+|---|---|
+| **framing** | the question, the gate, or the format was wrong — the work answered the wrong thing |
+| **memory** | a stale or wrong note was relied on, or a right one was not opened |
+| **reading** | a measurement or a verdict was misread — a probe that could not fail, an exit code taken for a result |
+
+⚠️ **Add a class only when a correction does not fit, and say why.** The third class above was
+added when a rule about checking one's own measurements turned out to describe a defect that is
+not the memory's — forcing it into "memory" would have hidden it.
+
+⛔ **The decision rule is written before the data arrives:** if, after about two months, the
+series for the class a norm targets **does not fall**, the norm did not work — **redesign it
+rather than reinforce it.** Writing the same rule more emphatically is the most common response
+to a norm that failed, and the series is what makes that visible.
+
 ### 3. Extend the norm upward
 
 The norm is usually written for agent → user. It applies just as much one step up:
@@ -81,11 +100,16 @@ An external or specialist review costs time and attention. It is worth it when t
 signed off by someone else). Routing everything through a reviewer to appear careful trains
 everyone to rubber-stamp — which removes the review while keeping its cost.
 
+⚠️ **When the whole team is the interested party** — the coordinator is judging itself, its
+tooling, or its own earlier answer — no reviewer inside the team is independent. That case has
+its own pattern: `patterns/cross-lineage-red-team/`.
+
 ## Principles
 
 1. **Question the premise before serving it** — once, and before starting.
 2. **Do not flatter; do not obstruct** — one round, then defer to the decision.
-3. **Verify by outcome, not by the presence of a sentence.**
+3. **Verify by outcome, not by the presence of a sentence** — count corrections by class, and
+   redesign a norm whose series does not fall.
 4. **The arbiter measures in another domain** than the thing it checks.
 5. **State your recommendation** — do not return it as a question.
 6. **Reviews are for learning or for authority** — never for appearances.

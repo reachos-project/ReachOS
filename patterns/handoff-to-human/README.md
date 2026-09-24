@@ -65,6 +65,31 @@ State up front: how long, what it touches, whether it is reversible, and what ha
 stop halfway. Someone who knows a step takes twenty minutes will not abandon it at minute
 fifteen.
 
+### When the handoff is a protected change
+
+The hardest handoff is a script that changes something protected — configuration, rules, the
+guards themselves — and runs in the person's own terminal. There, **none of the assistant's
+controls run**, and none of its rules are read. So what the assistant controls is not the run;
+it is the **delivery**. Three things travel with the script, and the person decides on them:
+
+1. **The checksum of the script as delivered**, so that what runs is what was checked.
+2. **The checker's output, verbatim** — the state by its full name and every list it printed.
+   Not a summary: a list the assistant summarised is no longer the list the person decides on.
+3. **Where the backup is, the result of verifying it, and the command to repeat that
+   verification.** A backup obligation cannot be verified from the script, since the backup is
+   not an input to any check of the script. From the delivery, it can.
+
+⛔ **What does not travel with it is an opinion that it "can run".** If the check disclosed
+destructive operations, the decision is the person's; if it came back clean, the check was
+lexical and says nothing about behaviour.
+
+⚠️ **Name what the delivery does not catch, instead of implying that it does.** A guard that
+can never fire — a status captured after a pipe, a condition that is always false — survives
+all three items above. The only act that catches it is a **complete reading** of the script by
+the assistant before delivery, and that reading is not delegated to a pattern search. The
+specifics for protected applies are in `patterns/apply-preflight/` § "What travels with the
+script to the person".
+
 ## The other direction: know what you can actually do
 
 ⛔ **The mirror-image failure is handing over work that did not need handing over.**
@@ -90,3 +115,5 @@ must do this".
 4. **Idempotent, validating, self-logging** — written for one tired run.
 5. **Batch the crossings** that belong to one decision.
 6. **Check before declaring something out of reach** — "can't" is a claim.
+7. **A protected change travels with its checksum, the checker's verbatim output, and a
+   verifiable backup** — never with an opinion that it can run.

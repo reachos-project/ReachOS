@@ -39,6 +39,47 @@ conditional ones explicitly (a rollback definition invoked only if someone rever
 ⚠️ **Archive the version WITHOUT the marker.** An archived file that says *"this is not the
 copy that runs"* starts lying the day it is restored.
 
+⚠️ **A search finds mentions, not consumers.** In one deployment, a pre-check halted a drain
+because it had found an "external caller" of the script — which turned out to be prose, inside
+another file, quoting the script's name. True to the search, false to the fact. Open each hit
+before treating it as a dependency.
+
+#### One name for where drained things go
+
+Pick **one** destination name for what is no longer in force — a folder named for the
+relation, such as "superseded", inside the working folder the artefact came from — and use
+nothing else. In one deployment, three schemes were found in use in the same tree (an
+"archive", a "superseded" and a "history" folder). Three names are not a system; they are three habits, and whoever looks for something
+drained has to guess which one was used.
+
+⭐ **Name the relation, not the age.** "Superseded" says *something replaced this*; "history"
+only says *this is old*. The first tells the reader where to look next.
+
+A separate, coarser name for whole trees retired at the root is fine — it is a different scale.
+Inside a working folder, one name.
+
+#### The manifest uses absolute paths
+
+The checksum manifest next to the drained files records **absolute** paths. ⛔ With relative
+names, the verifier resolves them against whatever directory it is run from, and reports every
+file as failed — which reads as corruption, and sends someone restoring a backup that was fine.
+
+#### A rollback net has a lifecycle
+
+A **rollback net** — a verbatim backup taken before a patch, a pre-patch copy of a payload — is
+not permanent. It is drained in four steps, and the fourth is not optional:
+
+1. **Patch** with a dry-run and a revert option, with the net beside it.
+2. **A dated go-ahead** from the person who owns the change.
+3. **Validation** that what it touched is stable and error-free — over a period, not a moment.
+4. **Drain the net, and write the reason and the solution into the domain's manual**
+   (`patterns/domain-manuals/`).
+
+⛔ **Without step 4 the net lives forever and nobody watches it.** In one deployment, a count
+found rollback folders in the dozens across the working tree, some of them with no consumer at
+all.
+⚠️ A net without a clock is debt; a net drained before the problem is solved is loss.
+
 ### 2. Mark — only what cannot be drained
 
 When the artefact must stay (it is loaded by absolute path, it is the rollback target at a
@@ -80,8 +121,12 @@ Cost is not storage. Cost is a wrong conclusion with the appearance of evidence.
 ## Principles
 
 1. **Drain before marking** — the best warning is the file not being there.
-2. **Enumerate consumers before removing** — including the ones invoked only on rollback.
+2. **Enumerate consumers before removing** — including the ones invoked only on rollback — and
+   open each search hit: a mention is not a consumer.
 3. **Never assert state in a marker** — point at the verifier that can answer.
 4. **Archive without the marker** — it becomes false on restore.
 5. **Verify by discovery** — a hand-written list of what to watch drifts from what is watched.
 6. **A checker that never goes silent teaches everyone to ignore it.**
+7. **One destination name, a manifest with absolute paths.**
+8. **A rollback net has a clock** — drained after validation, with the reason written into the
+   domain's manual.
