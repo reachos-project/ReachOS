@@ -41,6 +41,9 @@
 >
 > **Published: 2026-09-10.** Every "as of publication" in this chapter means that date.
 > **Corrected: 2026-09-24** — finding 1 was wrong as published; see §"Corrections".
+> **Corrected: 2026-10-26** — the permissions section described the runtime up to build
+> 2.1.282; build 2.1.302, observed in October 2026, changed it. The observations added by this
+> correction extend the July–September window to that build only. See §"Corrections".
 >
 > *Claude, Claude Code, and Anthropic are trademarks of Anthropic PBC, used here solely to
 > identify the product observed. No affiliation, authorisation, endorsement, partnership, or
@@ -206,6 +209,13 @@ or block.
 ⛔ **The non-blocking failure path is worse than useless as a warning channel.** It reads, from
 the outside, like a hook that "failed loudly". The agent hears silence and carries on.
 
+⭐ **From build 2.1.302 a runtime field corroborates this.** Hook records now carry a field that,
+by its name, records the role in which their output was rendered; that reading of it is ours,
+not documented. In one operator's re-measurement it was absent on every success that wrote only
+to stderr (6 of 6) and on every non-blocking error (2 of 2), and present on most successes that
+wrote to stdout (120 of 139; the remaining 19 are not explained). Small numbers, one host — the
+direction matches the table above, and the field is the runtime's own.
+
 **The blocking message echoes your hook's configured command line to the model** — including
 variables that were never expanded. Hook internals are not opaque. **Treat your hook's
 invocation path as published text.**
@@ -228,33 +238,42 @@ timings, collected errors, added context, and a flag that can **prevent the turn
 
 ---
 
-## Permissions: the observability hole
+## Permissions: the observability hole — narrowed in build 2.1.302
 
-⛔ **Permission denials are visible. Permission *decisions* are not.**
+⚠️ **This section changed after publication.** Up to build 2.1.282, the last observed before
+the change, it read as below. Build 2.1.302 added a decision record; what that record does and
+does not contain follows.
 
-A denial surfaces as an errored tool result naming the tool. Refusal by a person and refusal by a
-hook are likewise visible. So the boundary is not silent.
+**Up to 2.1.282: denials were visible, decisions were not.** A denial surfaced as an errored tool
+result naming the tool; refusal by a person and refusal by a hook were likewise visible. What no
+record contained was **which rule decided** — no rule value, no decision reason, and no allow
+event at all. *(Declared absence with a positive control: the same search found the three kinds
+of refusal.)*
 
-What no record anywhere contains is **which rule decided**. No rule value, no decision reason,
-and — the part that matters most — **no allow event at all**. You can see that something was
-refused. You cannot see *why*, and you can never see what was **permitted**.
+**From 2.1.302: decisions are recorded, rules are not.** Nearly every tool result now carries a
+permission decision record with three things: the **decision** (accepted or rejected), a
+**reason type** naming the class of mechanism that decided — for example a configured rule, a
+hook, or the permission mode — and a **source** naming where the deciding input came from, for
+example configuration or a hook. Measured on one operator's
+transcripts: present on 3,479 of 3,481 tool results written by 2.1.302, and on 0 of 6,942
+written by 2.1.282.
 
-This is a **declared absence with a positive control**: the same search does find the three kinds
-of refusal, so the search works; the decision record does not exist.
-
-⭐ **The gap is one of attribution, not of visibility** — which is the more useful shape, because
-it names precisely what you must instrument yourself: **the mapping from a decision back to the
-rule that made it.** Nothing else is missing.
+⭐ **What is still missing is exactly one thing: which rule.** The record says *a rule* decided;
+it does not say *which*. The gap was attribution all along, and attribution is what remains —
+**the mapping from a decision back to the rule that made it** is still yours to instrument.
 
 ⚠️ **And refusal is not a quiet boundary.** The denial message echoes **the full command string**
 back into the model's context. Whatever a command carries on its argument line — a path, a flag,
 a query string — enters context *because* it was refused. Anything you would not want in context
 should not be on a command line you expect to be denied.
 
-⭐ **What follows for design:** you cannot audit permission behaviour from transcripts after the
-fact. If you need that evidence, you must generate it yourself — and **the only boundaries that
-write to the transcript are the hooks**. That is a strong reason to route decisions you will want
-to defend later through a hook that logs, rather than through configuration that does not.
+⭐ **What follows for design:** from 2.1.302 you can audit *that* something was permitted or
+refused, and *what class of mechanism* decided, from transcripts after the fact. You still
+cannot audit *which rule*, and nothing written before 2.1.302 carries the record at all — a
+corpus spanning the change is a mixture, so stratify by build before reading an absence
+(§"Checking these yourself", step 3). Rule-level evidence still has to come from a boundary
+you control, and **the hooks remain the only one that writes your own evidence to the
+transcript.**
 
 **A human refusal is a message, not an exception.** It arrives as an ordinary tool result
 instructing the model to stop and wait. Whether the loop actually stops is a matter of
@@ -282,11 +301,15 @@ validating never ran. **Any negative security result must first prove the tool e
 See `patterns/adversarial-review/` — this is the concrete mechanism behind "prove the probe can
 see the thing it is looking for".
 
-**Delegate transcripts contain no system records.** Sub-agent sessions are written separately,
-and their streams carry only conversation — none of the system-level events (compaction
-boundaries, model changes, turn timing) that main sessions carry. **You cannot diagnose a
-delegate's stall from the delegate's own log**; the events that would explain it are not written
-there.
+**Delegate transcripts carry almost no system records.** Sub-agent sessions are written
+separately, and across 36 builds their streams carried only conversation — none of the
+system-level events (compaction boundaries, model changes, turn timing) that main sessions
+carry. In the two most recent builds observed (2.1.282 and 2.1.302), a delegate that compacted
+wrote its compaction boundary into its own transcript (rare: 4 occurrences), and in 2.1.302
+delegates also carry per-request records.
+Whether the first is a product change or simply the first delegates long enough to compact, we
+cannot tell. Turn timing and model changes are still not written there: **you still cannot
+fully diagnose a delegate's stall from the delegate's own log.**
 
 **Only the final message crosses back.** The parent receives status, resolved model, duration,
 token totals, tool-use counts and a per-tool breakdown — plus the delegate's final content.
@@ -313,7 +336,8 @@ typed deltas that distinguish, among others, tools added, removed, and still pen
 
 ⭐ **If you are optimising context, this is the largest lever the runtime already gives you** —
 names are cheap, schemas are not, and schemas are only loaded when selected. It is easy to miss
-precisely because it works silently.
+precisely because it works silently. From build 2.1.302 the per-request records mark which
+tools were sent with deferred loading, so the lever can be measured rather than assumed.
 
 **Servers can still be pending when the session starts.** Absence of a capability at the first
 turn is not absence of the capability — the registry populates asynchronously.
@@ -354,6 +378,12 @@ in every observed case.
 of the conversation you maintain **can silently diverge from what the model actually sees**,
 because history is not append-only.
 
+*Not re-measured on 2.1.302.* No model switch was observed in the window. Retraction could not
+be re-tested: our search for its record did not find it even in builds where this page reports
+it, so a negative here would carry no information. That build also records the requested model
+beside the resolved one on assistant messages; in the window every difference was only a
+context-size suffix on the same model.
+
 ---
 
 ## What you actually pay for
@@ -374,6 +404,9 @@ every session", and it is invisible unless you look at the usage fields on each 
 Modelling the cache as a single TTL will mislead you: durable prefix material and volatile
 material are placed differently.
 
+From build 2.1.302 the transcript records each request, including its cache directives — so the
+two lifetimes are visible per request as directives, not only as a split in the usage fields.
+
 ---
 
 ## Checking these yourself
@@ -391,7 +424,10 @@ also carry material that belongs to the vendor rather than to you — verbatim s
 it. Establishing that such records *exist* is observation of behaviour. Republishing their
 *contents* is not, and is outside both this method and this page: treat vendor-authored text
 sitting in your own transcripts as the vendor's, and leave it where it landed. Nothing of that
-kind is reproduced here, and nothing of that kind belongs in what you publish either.
+kind is reproduced here, and nothing of that kind belongs in what you publish either. From
+build 2.1.302 the per-request records add more of it: the system prompt and the tool
+descriptions sent with each request. The same rule applies — their existence is observable,
+their contents are the vendor's.
 
 To reproduce the method:
 
@@ -434,13 +470,18 @@ Stated because a gap named is worth more than a gap implied:
   a single window size.
 - **Exactly what "rendered into context" means** in every case. Claims here are restricted to the
   cleanest cases and the ambiguous middle was left out rather than reported as a ratio.
+  From build 2.1.302 a per-record field that appears to name the rendered role may narrow this;
+  its meaning is inferred from its name, and this page has used it only for hooks (§"Hooks").
 - **Whether any of this varies by platform or configuration.** Every observation comes from a
   single operator, on one operating system, under one configuration. Nothing here has been
   cross-checked against a second deployment — which is the widest bound on the whole page.
 
-⚠️ **The finding most likely to expire first is the permission attribution gap.** A single
-release that adds a decision record would turn it from a true statement into a stale one, and
-nothing in the transcript would announce that it had changed.
+⚠️ **The finding we said would expire first did — in part.** This page said a single release
+adding a decision record would turn the permission attribution gap stale, and that nothing in
+the transcript would announce it. Build 2.1.302 added that record. Nothing announced it: it was
+found by a scheduled re-measurement of the finding this page had named as most likely to expire. The
+decision and its reason class are now recorded; which rule decided is still not. §"Permissions"
+carries both states, dated.
 
 ⭐ **A worked example of why the last item in "Checking these yourself" matters.** The first draft
 of this page claimed permission refusals were only visible in two forms. A second pass found a
@@ -453,6 +494,20 @@ this, assume it can happen to you.**
 ---
 
 ## Corrections
+
+**2026-10-26 — the permissions section was overtaken by build 2.1.302.**
+
+- **What the page said:** no record contained the rule that decided, the reason for a decision,
+  or any allow event.
+- **What is observed now:** true up to build 2.1.282. From 2.1.302 nearly every tool result
+  (3,479 of 3,481) carries the decision, a reason type and a source; it still does not name the
+  rule.
+- **Not an error in the original:** the runtime changed. The original claim is kept, dated, in
+  §"Permissions".
+- **How it was found:** a scheduled re-measurement after a build change, stratified by build
+  (§"Checking these yourself", step 3). The same pass re-tested every other claim the change
+  touched; the hooks, cost and tool-loading findings gained direct evidence, the sub-agent
+  finding was qualified, and two model-change findings could not be re-tested and are marked so.
 
 **2026-09-24 — finding 1 (HTML comments) was wrong as published.**
 
